@@ -20,9 +20,12 @@ import {
   Flame,
   Clock,
   ArrowUpDown,
+  Tag,
+  Check,
 } from "lucide-react";
 
 export type FAQCategory = "all" | "identity" | "welfare" | "financial" | "legal";
+export type SpecificCategory = "identity" | "welfare" | "financial" | "legal";
 export type FAQSortMode = "popular" | "newest";
 
 interface FAQItem {
@@ -294,9 +297,26 @@ const FAQ_ITEMS: FAQItem[] = [
 export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () => void }) {
   const { language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState<FAQCategory>("all");
+  const [selectedCategories, setSelectedCategories] = useState<Set<SpecificCategory>>(new Set());
   const [sortMode, setSortMode] = useState<FAQSortMode>("popular");
   const [expandedId, setExpandedId] = useState<string | null>("faq-welfare-2");
+
+  // Category toggle handler (toggles a single category in/out of the filter set)
+  const toggleCategory = (cat: SpecificCategory) => {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) {
+        next.delete(cat);
+      } else {
+        next.add(cat);
+      }
+      return next;
+    });
+  };
+
+  const clearCategoryFilters = () => {
+    setSelectedCategories(new Set());
+  };
 
   // Local dictionaries for dashboard elements
   const localT = {
@@ -310,13 +330,21 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
       catWelfare: "Welfare",
       catFinancial: "Financial",
       catLegal: "Legal",
-      filterTitle: "Filter by Category:",
+      filterTitle: "Category Tags:",
+      filterHint: "Toggle tags on/off to filter list",
+      activeFilters: "Active Category Filters:",
+      clearTags: "Clear Tags",
+      tagActiveHint: "Active (click to remove)",
+      tagInactiveHint: "Click to toggle tag",
+      filterByTagHint: "Toggle category tag filter",
+      tagActive: "Active",
+      tagInactive: "Tag",
       sortByTitle: "Sort Questions:",
       sortPopular: "Most Popular",
       sortNewest: "Newest",
       itemsCount: "questions",
       noResults: "No Matching Frequently Asked Questions Found",
-      noResultsDesc: "Try revising your search terms or selecting a different category.",
+      noResultsDesc: "Try revising your search terms or selecting a different category tag.",
       clearFilter: "Reset Filters",
       backBtn: "Apply for Services",
       quickTipTitle: "Statutory Tip",
@@ -343,13 +371,21 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
       catWelfare: "कल्याणकारी (Welfare)",
       catFinancial: "वित्तीय (Financial)",
       catLegal: "कानूनी (Legal)",
-      filterTitle: "श्रेणी अनुसार फ़िल्टर करें:",
+      filterTitle: "दृश्य श्रेणी टैग:",
+      filterHint: "सूची फ़िल्टर करने हेतु टैग टॉगल करें",
+      activeFilters: "सक्रिय श्रेणी फ़िल्टर:",
+      clearTags: "टैग हटाएं",
+      tagActiveHint: "सक्रिय (हटाने हेतु क्लिक करें)",
+      tagInactiveHint: "टैग जोड़ने हेतु क्लिक करें",
+      filterByTagHint: "श्रेणी टैग फ़िल्टर टॉगल करें",
+      tagActive: "सक्रिय",
+      tagInactive: "टैग",
       sortByTitle: "क्रमबद्ध करें:",
       sortPopular: "सबसे लोकप्रिय",
       sortNewest: "नवीनतम",
       itemsCount: "प्रश्न",
       noResults: "कोई मेल खाता प्रश्न नहीं मिला",
-      noResultsDesc: "कृपया अधिक सरल शब्दों का प्रयोग करें या कोई अन्य श्रेणी चुनें।",
+      noResultsDesc: "कृपया अधिक सरल शब्दों का प्रयोग करें या कोई अन्य श्रेणी टैग चुनें।",
       clearFilter: "फ़िल्टर रीसेट करें",
       backBtn: "सेवाओं के लिए आवेदन करें",
       quickTipTitle: "कानूनी परामर्श संकेत",
@@ -368,48 +404,73 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
 
   const currentT = localT[language === "hi" ? "hi" : "en"] || localT["en"];
 
-  // Category items definition with counts and icons
+  // Category visual tag items definition with counts and icons
   const categoryTabs: {
     id: FAQCategory;
     label: string;
     icon: React.ComponentType<{ className?: string }>;
     accentColor: string;
     activeClasses: string;
+    inactiveClasses: string;
+    iconColor: string;
+    countBadgeClasses: string;
   }[] = [
     {
       id: "all",
       label: currentT.catAll,
       icon: Layers,
       accentColor: "stone",
-      activeClasses: "bg-stone-900 text-white border-stone-900 shadow-xs",
+      activeClasses: "bg-stone-900 text-white border-stone-900 shadow-xs ring-2 ring-stone-900/20",
+      inactiveClasses:
+        "bg-white border-stone-250 hover:bg-stone-50 text-stone-700 hover:border-stone-300",
+      iconColor: "text-stone-500",
+      countBadgeClasses: "bg-stone-100 text-stone-600 border border-stone-200",
     },
     {
       id: "identity",
       label: currentT.catIdentity,
       icon: Fingerprint,
       accentColor: "blue",
-      activeClasses: "bg-blue-700 text-white border-blue-700 shadow-xs",
+      activeClasses: "bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-500/25",
+      inactiveClasses:
+        "bg-blue-50/70 hover:bg-blue-100/90 text-blue-800 border-blue-200 hover:border-blue-300",
+      iconColor: "text-blue-600",
+      countBadgeClasses: "bg-blue-100/80 text-blue-700 border border-blue-200",
     },
     {
       id: "welfare",
       label: currentT.catWelfare,
       icon: HeartHandshake,
       accentColor: "emerald",
-      activeClasses: "bg-emerald-700 text-white border-emerald-700 shadow-xs",
+      activeClasses:
+        "bg-emerald-600 text-white border-emerald-600 shadow-sm ring-2 ring-emerald-500/25",
+      inactiveClasses:
+        "bg-emerald-50/70 hover:bg-emerald-100/90 text-emerald-800 border-emerald-200 hover:border-emerald-300",
+      iconColor: "text-emerald-600",
+      countBadgeClasses: "bg-emerald-100/80 text-emerald-700 border border-emerald-200",
     },
     {
       id: "financial",
       label: currentT.catFinancial,
       icon: Landmark,
       accentColor: "amber",
-      activeClasses: "bg-amber-600 text-white border-amber-600 shadow-xs",
+      activeClasses: "bg-amber-600 text-white border-amber-600 shadow-sm ring-2 ring-amber-500/25",
+      inactiveClasses:
+        "bg-amber-50/70 hover:bg-amber-100/90 text-amber-900 border-amber-200 hover:border-amber-300",
+      iconColor: "text-amber-600",
+      countBadgeClasses: "bg-amber-100/80 text-amber-800 border border-amber-200",
     },
     {
       id: "legal",
       label: currentT.catLegal,
       icon: Scale,
       accentColor: "purple",
-      activeClasses: "bg-purple-700 text-white border-purple-700 shadow-xs",
+      activeClasses:
+        "bg-purple-600 text-white border-purple-600 shadow-sm ring-2 ring-purple-500/25",
+      inactiveClasses:
+        "bg-purple-50/70 hover:bg-purple-100/90 text-purple-900 border-purple-200 hover:border-purple-300",
+      iconColor: "text-purple-600",
+      countBadgeClasses: "bg-purple-100/80 text-purple-800 border border-purple-200",
     },
   ];
 
@@ -430,11 +491,11 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
     return counts;
   }, []);
 
-  // Apply search query, category filtering, AND sorting
+  // Apply search query, category tag filtering (multi-toggle), AND sorting
   const filteredAndSortedItems = useMemo(() => {
     const filtered = FAQ_ITEMS.filter((item) => {
-      // Category filter
-      if (activeCategory !== "all" && item.category !== activeCategory) {
+      // Visual category tag filter: if any tags are toggled, item must match one of them
+      if (selectedCategories.size > 0 && !selectedCategories.has(item.category)) {
         return false;
       }
       // Search term filter
@@ -465,7 +526,7 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
         return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
       }
     });
-  }, [searchQuery, activeCategory, sortMode]);
+  }, [searchQuery, selectedCategories, sortMode]);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -475,27 +536,35 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
     switch (cat) {
       case "identity":
         return {
-          label: language === "hi" ? "पहचान" : "Identity",
+          label: language === "hi" ? "पहचान (Identity)" : "Identity",
+          shortLabel: language === "hi" ? "पहचान" : "Identity",
           icon: Fingerprint,
-          className: "bg-blue-50 text-blue-700 border-blue-200",
+          className: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100",
+          activeClassName: "bg-blue-600 text-white border-blue-600 shadow-xs",
         };
       case "welfare":
         return {
-          label: language === "hi" ? "कल्याण" : "Welfare",
+          label: language === "hi" ? "कल्याण (Welfare)" : "Welfare",
+          shortLabel: language === "hi" ? "कल्याण" : "Welfare",
           icon: HeartHandshake,
-          className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+          className: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100",
+          activeClassName: "bg-emerald-600 text-white border-emerald-600 shadow-xs",
         };
       case "financial":
         return {
-          label: language === "hi" ? "वित्तीय" : "Financial",
+          label: language === "hi" ? "वित्तीय (Financial)" : "Financial",
+          shortLabel: language === "hi" ? "वित्तीय" : "Financial",
           icon: Landmark,
-          className: "bg-amber-50 text-amber-800 border-amber-200",
+          className: "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100",
+          activeClassName: "bg-amber-600 text-white border-amber-600 shadow-xs",
         };
       case "legal":
         return {
-          label: language === "hi" ? "कानूनी" : "Legal",
+          label: language === "hi" ? "कानूनी (Legal)" : "Legal",
+          shortLabel: language === "hi" ? "कानूनी" : "Legal",
           icon: Scale,
-          className: "bg-purple-50 text-purple-700 border-purple-200",
+          className: "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100",
+          activeClassName: "bg-purple-600 text-white border-purple-600 shadow-xs",
         };
     }
   };
@@ -584,17 +653,23 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
           </div>
 
           {/* Category Filter Pills & Sort Controls */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
-            {/* Category Filter Pills */}
-            <div className="space-y-1.5 flex-1">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3 pt-1">
+            {/* Visual Tag System for Categories */}
+            <div className="space-y-2 flex-1" id="faq-visual-tag-system">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
-                  {currentT.filterTitle}
-                </span>
-                {(activeCategory !== "all" || searchQuery) && (
+                <div className="flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-stone-500" />
+                  <span className="text-[11px] font-bold text-stone-600 uppercase tracking-wider">
+                    {currentT.filterTitle}
+                  </span>
+                  <span className="text-[10.5px] text-stone-400 font-normal hidden sm:inline">
+                    ({currentT.filterHint})
+                  </span>
+                </div>
+                {(selectedCategories.size > 0 || searchQuery) && (
                   <button
                     onClick={() => {
-                      setActiveCategory("all");
+                      clearCategoryFilters();
                       setSearchQuery("");
                     }}
                     className="text-[11px] text-brand-coral hover:underline font-semibold flex items-center gap-1 cursor-pointer"
@@ -606,46 +681,107 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
                 )}
               </div>
 
+              {/* Tag Toggles Bar */}
               <div className="flex flex-wrap gap-2" id="faq-category-toggles">
-                {categoryTabs.map((cat) => {
-                  const IconComponent = cat.icon;
-                  const isActive = activeCategory === cat.id;
-                  const count = categoryCounts[cat.id];
+                {/* All Topics Tag */}
+                <button
+                  key="all"
+                  onClick={clearCategoryFilters}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer select-none border flex items-center gap-1.5 shadow-2xs ${
+                    selectedCategories.size === 0
+                      ? "bg-stone-900 text-white border-stone-900 shadow-xs ring-2 ring-stone-900/20"
+                      : "bg-white border-stone-250 hover:bg-stone-50 text-stone-700 hover:border-stone-300"
+                  }`}
+                  id="faq-cat-filter-all"
+                  aria-pressed={selectedCategories.size === 0}
+                  title="Show all category questions"
+                >
+                  <Layers
+                    className={`w-3.5 h-3.5 shrink-0 ${
+                      selectedCategories.size === 0 ? "text-white" : "text-stone-500"
+                    }`}
+                  />
+                  <span>{currentT.catAll}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono transition ${
+                      selectedCategories.size === 0
+                        ? "bg-white/20 text-white"
+                        : "bg-stone-100 text-stone-600 border border-stone-200"
+                    }`}
+                  >
+                    {FAQ_ITEMS.length}
+                  </span>
+                </button>
 
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setActiveCategory(cat.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer select-none border flex items-center gap-1.5 ${
-                        isActive
-                          ? cat.activeClasses
-                          : "bg-white border-stone-250 hover:bg-stone-50 text-stone-700 hover:border-stone-300"
-                      }`}
-                      id={`faq-cat-filter-${cat.id}`}
-                    >
-                      <IconComponent
-                        className={`w-3.5 h-3.5 shrink-0 ${
-                          isActive ? "text-white" : "text-stone-500"
+                {/* Specific Category Tags: Identity, Welfare, Financial, Legal */}
+                {categoryTabs
+                  .filter((cat) => cat.id !== "all")
+                  .map((cat) => {
+                    const IconComponent = cat.icon;
+                    const isToggled = selectedCategories.has(cat.id as SpecificCategory);
+                    const count = categoryCounts[cat.id];
+
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => toggleCategory(cat.id as SpecificCategory)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer select-none border flex items-center gap-1.5 shadow-2xs hover:scale-[1.02] active:scale-[0.98] ${
+                          isToggled ? cat.activeClasses : cat.inactiveClasses
                         }`}
-                      />
-                      <span>{cat.label}</span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono transition ${
-                          isActive
-                            ? "bg-white/20 text-white"
-                            : "bg-stone-100 text-stone-600 border border-stone-200"
-                        }`}
+                        id={`faq-cat-filter-${cat.id}`}
+                        aria-pressed={isToggled}
+                        title={`${isToggled ? currentT.tagActiveHint : currentT.tagInactiveHint}: ${cat.label}`}
                       >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
+                        {isToggled ? (
+                          <Check className="w-3.5 h-3.5 shrink-0 text-white" />
+                        ) : (
+                          <IconComponent className={`w-3.5 h-3.5 shrink-0 ${cat.iconColor}`} />
+                        )}
+                        <span>{cat.label}</span>
+                        <span
+                          className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono transition ${
+                            isToggled ? "bg-white/25 text-white" : cat.countBadgeClasses
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
               </div>
+
+              {/* Active Visual Tags Filter Strip */}
+              {selectedCategories.size > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-[11px] text-stone-600 animate-fadeIn">
+                  <span className="font-semibold text-stone-500">{currentT.activeFilters}</span>
+                  {Array.from(selectedCategories).map((catId) => {
+                    const badge = getCategoryBadge(catId);
+                    const BadgeIcon = badge.icon;
+                    return (
+                      <span
+                        key={catId}
+                        onClick={() => toggleCategory(catId)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg font-bold border text-[10.5px] cursor-pointer hover:opacity-85 transition select-none shadow-2xs ${badge.activeClassName}`}
+                        title={`${currentT.tagActiveHint}: ${badge.label}`}
+                      >
+                        <BadgeIcon className="w-3 h-3" />
+                        <span>{badge.shortLabel}</span>
+                        <X className="w-3 h-3 ml-0.5 hover:scale-125 transition" />
+                      </span>
+                    );
+                  })}
+                  <button
+                    onClick={clearCategoryFilters}
+                    className="text-[11px] text-stone-400 hover:text-stone-700 underline ml-1 cursor-pointer"
+                  >
+                    {currentT.clearTags}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Sorting Controls */}
-            <div className="space-y-1.5 lg:border-l lg:border-stone-200/80 lg:pl-4 shrink-0">
+            <div className="space-y-1.5 lg:border-l lg:border-stone-200/80 lg:pl-4 shrink-0 pt-1 lg:pt-0">
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-stone-500 uppercase tracking-wider">
                 <ArrowUpDown className="w-3 h-3 text-stone-400" />
                 <span>{currentT.sortByTitle}</span>
@@ -704,10 +840,15 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
           <span>
             Showing <strong className="text-stone-800">{filteredAndSortedItems.length}</strong>{" "}
             {currentT.itemsCount}
-            {activeCategory !== "all" && (
+            {selectedCategories.size > 0 && (
               <>
                 {" "}
-                in category <strong className="text-stone-800 capitalize">{activeCategory}</strong>
+                in tags:{" "}
+                <span className="font-bold text-stone-800">
+                  {Array.from(selectedCategories)
+                    .map((c) => getCategoryBadge(c).label)
+                    .join(", ")}
+                </span>
               </>
             )}
             {searchQuery && (
@@ -749,7 +890,7 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
               </p>
               <button
                 onClick={() => {
-                  setActiveCategory("all");
+                  clearCategoryFilters();
                   setSearchQuery("");
                 }}
                 className="mt-4 px-4 py-1.5 bg-stone-900 text-white rounded-xl text-xs font-semibold hover:bg-stone-800 transition cursor-pointer"
@@ -787,11 +928,33 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
                       />
                       <div className="space-y-1.5 flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
+                          {/* Visual Category Tag Pill on question card (clickable to toggle category filter) */}
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${badge.className}`}
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleCategory(item.category);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.stopPropagation();
+                                toggleCategory(item.category);
+                              }
+                            }}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer select-none hover:scale-105 active:scale-95 ${
+                              selectedCategories.has(item.category)
+                                ? "ring-2 ring-offset-1 " + badge.activeClassName
+                                : badge.className
+                            }`}
+                            title={`${currentT.filterByTagHint}: ${badge.label}`}
                           >
-                            <BadgeIcon className="w-3 h-3" />
-                            {badge.label}
+                            {selectedCategories.has(item.category) ? (
+                              <Check className="w-3 h-3" />
+                            ) : (
+                              <BadgeIcon className="w-3 h-3" />
+                            )}
+                            <span>{badge.shortLabel}</span>
                           </span>
 
                           {/* Popularity indicator badge */}
@@ -815,7 +978,20 @@ export default function ESevaFaq({ onBackToServices }: { onBackToServices?: () =
                           {item.tags.slice(0, 3).map((tag) => (
                             <span
                               key={tag}
-                              className="text-[9.5px] px-1.5 py-0.5 bg-stone-100 text-stone-500 rounded font-mono hidden sm:inline-block"
+                              role="button"
+                              tabIndex={0}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSearchQuery(tag);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.stopPropagation();
+                                  setSearchQuery(tag);
+                                }
+                              }}
+                              className="text-[9.5px] px-1.5 py-0.5 bg-stone-100 hover:bg-amber-100 hover:text-amber-900 border border-stone-200 text-stone-500 rounded font-mono hidden sm:inline-block cursor-pointer transition select-none"
+                              title={`Filter by keyword #${tag}`}
                             >
                               #{tag}
                             </span>

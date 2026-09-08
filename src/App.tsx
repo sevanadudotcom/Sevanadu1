@@ -68,6 +68,7 @@ import RtiFilingModal from "./components/RtiFilingModal";
 import StatusCheckModal from "./components/StatusCheckModal";
 import VerifiedDiscussions from "./components/VerifiedDiscussions";
 import VoiceSearch from "./components/VoiceSearch";
+import TopNavBar from "./components/TopNavBar";
 import { getApiUrl } from "./lib/api";
 
 export default function App() {
