@@ -80,7 +80,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "author", content: "SewaNadu" },
       { property: "og:title", content: "SewaNadu — Civic Policy & Governance Portal" },
-      { property: "og:description", content: "An independent directory of Indian central and state citizen e-services with guidelines, eligibility checks, document lists, and grievance assistance." },
+      {
+        property: "og:description",
+        content:
+          "An independent directory of Indian central and state citizen e-services with guidelines, eligibility checks, document lists, and grievance assistance.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1" },
@@ -94,6 +98,41 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": "https://sewanadu.in/#organization",
+              name: "SewaNadu",
+              url: "https://sewanadu.in",
+              email: "sevanadudotcom@gmail.com",
+              description:
+                "Independent educational portal and citizen directory of Indian central and state government e-services.",
+              publishingPrinciples: "https://sewanadu.in/editorial-policy",
+              contactPoint: {
+                "@type": "ContactPoint",
+                email: "sevanadudotcom@gmail.com",
+                contactType: "customer support",
+                availableLanguage: ["English", "Hindi"],
+              },
+            },
+            {
+              "@type": "WebSite",
+              "@id": "https://sewanadu.in/#website",
+              url: "https://sewanadu.in",
+              name: "SewaNadu — Civic Policy & Governance Portal",
+              publisher: {
+                "@id": "https://sewanadu.in/#organization",
+              },
+            },
+          ],
+        }),
       },
     ],
   }),

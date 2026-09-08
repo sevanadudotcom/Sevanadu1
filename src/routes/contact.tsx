@@ -13,7 +13,8 @@ export const Route = createFileRoute("/contact")({
       { property: "og:title", content: "Contact SewaNadu" },
       {
         property: "og:description",
-        content: "Report corrections, request services, or contact us about privacy and advertising.",
+        content:
+          "Report corrections, request services, or contact us about privacy and advertising.",
       },
       { property: "og:type", content: "article" },
       { property: "og:url", content: "/contact" },
@@ -28,18 +29,23 @@ export const Route = createFileRoute("/contact")({
       updated="5 August 2026"
       sections={[
         {
-          heading: "Email",
+          heading: "Email & Direct Channels",
           body: (
             <ul>
               <li>
-                General &amp; corrections:{" "}
-                <a href="mailto:support@sewanadu.in">support@sewanadu.in</a>
+                Primary Editorial &amp; Corrections Desk:{" "}
+                <a href="mailto:sevanadudotcom@gmail.com">sevanadudotcom@gmail.com</a>
               </li>
               <li>
-                Privacy &amp; data requests: <a href="mailto:privacy@sewanadu.in">privacy@sewanadu.in</a>
+                General Support: <a href="mailto:support@sewanadu.in">support@sewanadu.in</a>
               </li>
               <li>
-                Advertising: <a href="mailto:ads@sewanadu.in">ads@sewanadu.in</a>
+                Privacy &amp; Data Compliance:{" "}
+                <a href="mailto:privacy@sewanadu.in">privacy@sewanadu.in</a>
+              </li>
+              <li>
+                Advertising Inquiries (Google AdSense):{" "}
+                <a href="mailto:ads@sewanadu.in">ads@sewanadu.in</a>
               </li>
             </ul>
           ),

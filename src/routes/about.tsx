@@ -52,23 +52,30 @@ export const Route = createFileRoute("/about")({
           ),
         },
         {
-          heading: "How content is produced",
+          heading: "How content is produced & verified",
           body: (
             <p>
-              Every entry is compiled from publicly available official sources — ministry and state
-              department portals, service charters and published notifications — and rewritten for
-              clarity. Entries are reviewed periodically and corrected when readers report changes.
-              Where a rule varies by state or district, we say so instead of guessing.
+              Every entry is compiled from publicly available official sources — ministry
+              notifications, state gazettes, department citizen charters, and published
+              administrative orders — and rewritten into plain, actionable language. Entries are
+              reviewed periodically and updated whenever readers or public agencies notify us of
+              changes. Where a rule varies by state or district (such as local land registration
+              stamp duty or caste verification norms), we explicitly document those local nuances.
+              Read our full <a href="/editorial-policy">Editorial &amp; Fact-Checking Policy</a> for
+              complete methodology.
             </p>
           ),
         },
         {
-          heading: "Editorial independence",
+          heading: "Editorial independence & advertising standards",
           body: (
             <p>
-              Advertising pays the hosting bill. It never determines which services we cover or what
-              we say about them. Ads are clearly labelled and separated from editorial content, and
-              we do not accept payment for favourable placement in the directory.
+              Advertising (via Google AdSense) pays our server and hosting infrastructure bills,
+              keeping this public knowledge repository 100% free for every citizen. Commercial
+              advertising never influences which services we cover, how eligibility is calculated,
+              or what we say about administrative procedures. All advertisements are clearly marked
+              and segregated from educational content, and we do not accept sponsored directory
+              placements or endorsements.
             </p>
           ),
         },
@@ -76,16 +83,23 @@ export const Route = createFileRoute("/about")({
           heading: "Independence from government",
           body: (
             <p>
-              SewaNadu is not a government website and has no official affiliation. Read the full{" "}
-              <a href="/disclaimer">Disclaimer</a> for what that means in practice.
+              SewaNadu is an independent, non-governmental educational portal. We are not affiliated
+              with, endorsed by, or operating on behalf of the Government of India or any state
+              administration. We do not process government applications, collect official fees, or
+              store citizen identity credentials. For all official submissions, always use the
+              genuine government portals linked across our guides. Read our full{" "}
+              <a href="/disclaimer">Disclaimer</a> for details.
             </p>
           ),
         },
         {
-          heading: "Talk to us",
+          heading: "Author & publisher contacts",
           body: (
             <p>
-              Corrections, missing services and feedback are genuinely welcome — use the{" "}
+              SewaNadu is maintained by a dedicated team of civic technologists, researchers, and
+              public policy analysts committed to open governance and citizen empowerment. For
+              inquiries, corrections, or suggestions, contact our editorial desk directly at{" "}
+              <a href="mailto:sevanadudotcom@gmail.com">sevanadudotcom@gmail.com</a> or via our{" "}
               <a href="/contact">Contact</a> page.
             </p>
           ),

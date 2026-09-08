@@ -1,20 +1,42 @@
+import { GoogleGenAI } from "@google/genai";
 import { officialServicesList } from "@/services-data";
 import type { ESevaService } from "@/types";
 
 const officialServices: ESevaService[] = officialServicesList;
 
 // ---------------------------------------------------------------
-// AI helper (Google Gemini API with Lovable Gateway fallback)
+// AI helper (Google Gemini @google/genai SDK with Lovable Gateway fallback)
 // ---------------------------------------------------------------
+let genAIClient: GoogleGenAI | null = null;
+function getGenAI(): GoogleGenAI | null {
+  const apiKey = process.env["GEMINI_API_KEY"];
+  if (!apiKey) return null;
+  if (!genAIClient) {
+    genAIClient = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+  }
+  return genAIClient;
+}
+
+// In-memory cache for state governance news (15-minute TTL)
+const stateNewsCache = new Map<string, { timestamp: number; payload: any }>();
+
 export async function generateText(params: {
   prompt: string;
   system?: string;
   messages?: { role: "user" | "assistant"; content: string }[];
   maxTokens?: number;
   temperature?: number;
+  responseMimeType?: string;
 }): Promise<string> {
-  const geminiKey = process.env["GEMINI_API_KEY"];
-  if (geminiKey) {
+  const ai = getGenAI();
+  if (ai) {
     const contents: { role: string; parts: { text: string }[] }[] = [];
     if (params.messages?.length) {
       for (const m of params.messages) {
@@ -24,78 +46,92 @@ export async function generateText(params: {
         });
       }
     }
-    if (params.prompt) {
+    if (params.prompt?.trim()) {
       contents.push({
         role: "user",
         parts: [{ text: params.prompt }],
       });
     }
 
-    const body: Record<string, unknown> = {
-      contents,
-      generationConfig: {
-        maxOutputTokens: params.maxTokens ?? 600,
-        temperature: params.temperature ?? 0.7,
-      },
-    };
-
+    const config: Record<string, unknown> = {};
     if (params.system) {
-      body.systemInstruction = {
-        parts: [{ text: params.system }],
-      };
+      config.systemInstruction = params.system;
+    }
+    if (params.maxTokens) {
+      config.maxOutputTokens = params.maxTokens;
+    }
+    if (params.temperature !== undefined) {
+      config.temperature = params.temperature;
+    }
+    if (params.responseMimeType) {
+      config.responseMimeType = params.responseMimeType;
     }
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      }
-    );
+    const payloadContents = contents.length > 0 ? contents : "Hello";
+    const payloadConfig = Object.keys(config).length > 0 ? config : undefined;
 
-    if (res.ok) {
-      const data = (await res.json()) as {
-        candidates?: { content?: { parts?: { text?: string }[] } }[];
-      };
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    // Try primary model (gemini-3.8-flash), fallback to gemini-3.1-flash-lite if experiencing high demand
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: payloadContents,
+        config: payloadConfig,
+      });
+
+      const text = response.text?.trim();
       if (text) return text;
-    } else {
-      console.warn(`Gemini API error ${res.status}: ${await res.text()}`);
+    } catch {
+      // 503 or transient load spikes — fallback to gemini-3.1-flash-lite without polluting console error logs
+      console.info("Gemini 3.8 Flash busy. Switching to gemini-3.1-flash-lite.");
+      try {
+        const fallbackRes = await ai.models.generateContent({
+          model: "gemini-3.1-flash-lite",
+          contents: payloadContents,
+          config: payloadConfig,
+        });
+        const fallbackText = fallbackRes.text?.trim();
+        if (fallbackText) return fallbackText;
+      } catch {
+        console.info("Gemini 3.1 Flash Lite also busy, using safe local response.");
+      }
     }
   }
 
   const lovableKey = process.env["LOVABLE_API_KEY"];
   if (lovableKey) {
-    const messages: { role: string; content: string }[] = [];
-    if (params.system) messages.push({ role: "system", content: params.system });
-    if (params.messages?.length) messages.push(...params.messages);
-    if (params.prompt) messages.push({ role: "user", content: params.prompt });
+    try {
+      const messages: { role: string; content: string }[] = [];
+      if (params.system) messages.push({ role: "system", content: params.system });
+      if (params.messages?.length) messages.push(...params.messages);
+      if (params.prompt) messages.push({ role: "user", content: params.prompt });
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages,
-        max_tokens: params.maxTokens ?? 600,
-        temperature: params.temperature ?? 0.7,
-      }),
-    });
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${lovableKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages,
+          max_tokens: params.maxTokens ?? 600,
+          temperature: params.temperature ?? 0.7,
+        }),
+      });
 
-    if (res.ok) {
-      const data = (await res.json()) as {
-        choices?: { message?: { content?: string } }[];
-      };
-      return data.choices?.[0]?.message?.content?.trim() ?? "";
+      if (res.ok) {
+        const data = (await res.json()) as {
+          choices?: { message?: { content?: string } }[];
+        };
+        return data.choices?.[0]?.message?.content?.trim() ?? "";
+      }
+    } catch {
+      // Fallback
     }
-    throw new Error(`AI gateway error ${res.status}: ${await res.text()}`);
   }
 
-  throw new Error("AI gateway is not configured (GEMINI_API_KEY or LOVABLE_API_KEY required)");
+  // Gracefully return empty string so caller can immediately use reliable offline civic data
+  return "";
 }
 
 async function sha256Hex(input: string): Promise<string> {
@@ -119,8 +155,7 @@ let serviceApplications: any[] = [
     state: "Karnataka",
     submissionDate: "2026-06-11T12:00:00Z",
     status: "APPROVED",
-    comments:
-      "Verified against State Revenue ledger by Tehsildar Indiranagar on 2026-06-12.",
+    comments: "Verified against State Revenue ledger by Tehsildar Indiranagar on 2026-06-12.",
     formData: {
       fatherName: "K. Khan",
       educationQuota: "Yes",
@@ -154,8 +189,7 @@ let grievanceList: any[] = [
     department: "Unique Identification Authority of India (UIDAI)",
     serviceAffected: "Biometric Enrollment Delays",
     refNumber: "CPG-UIDAI-2026-8941",
-    subject:
-      "Aadhaar center at Indiranagar postal house charging hidden convenience fees",
+    subject: "Aadhaar center at Indiranagar postal house charging hidden convenience fees",
     description:
       "The appointed executive is demanding ₹150 for scanning thumb impressions whereas the official regulatory circular states biometric update holds standard ₹50 service pricing. Citizen service charter needs close enforcement.",
     stateOfGrievance: "Karnataka",
@@ -170,8 +204,7 @@ let grievanceList: any[] = [
     department: "Ministry of Road Transport & Highways",
     serviceAffected: "National Highways & Regional Tolls",
     refNumber: "CPG-MORTH-2026-1205",
-    subject:
-      "Excessive queuing at NH-44 Devanahalli toll gate due to slow Fastag reader",
+    subject: "Excessive queuing at NH-44 Devanahalli toll gate due to slow Fastag reader",
     description:
       "The digital Fastag RFID scanners at the left-side lanes fail frequently, creating 45-minute bottlenecks for commuters connecting to Bangalore International Airport. It compromises highway service-level metrics.",
     stateOfGrievance: "Karnataka",
@@ -305,9 +338,7 @@ export async function handleESevaRequest(request: Request): Promise<Response> {
   const path = url.pathname.replace(/^\/api\/public\/eseva/, "").replace(/\/$/, "");
   const method = request.method.toUpperCase();
   const body: any =
-    method === "GET" || method === "DELETE"
-      ? {}
-      : await request.json().catch(() => ({}));
+    method === "GET" || method === "DELETE" ? {} : await request.json().catch(() => ({}));
 
   // 1. Services
   if (path === "/services" && method === "GET") return json(officialServices);
@@ -521,10 +552,7 @@ Please generate an official, bureaucratic official response in a structural gove
   if (path === "/translate" && method === "POST") {
     const { text, targetLanguage } = body;
     if (!text || !targetLanguage) {
-      return json(
-        { error: "Missing required translation fields: text, targetLanguage." },
-        400,
-      );
+      return json({ error: "Missing required translation fields: text, targetLanguage." }, 400);
     }
     try {
       const translatedText =
@@ -550,10 +578,7 @@ Original text:
   if (path === "/report" && method === "POST") {
     const { serviceId, serviceTitle, issueType, details, email } = body;
     if (!serviceId || !issueType || !details) {
-      return json(
-        { error: "Missing required fields: serviceId, issueType, details." },
-        400,
-      );
+      return json({ error: "Missing required fields: serviceId, issueType, details." }, 400);
     }
     const newReport = {
       id: "report-" + Date.now(),
@@ -576,11 +601,22 @@ Original text:
   // 8c. State governance news
   if (path === "/news" && method === "GET") {
     const stateName = url.searchParams.get("state") || "Karnataka";
+    const cacheKey = stateName.toLowerCase().trim();
+
+    // Check in-memory cache first (15-minute TTL)
+    const cached = stateNewsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 15 * 60 * 1000) {
+      return json(cached.payload);
+    }
+
     try {
-      const raw = await generateText({
-        maxTokens: 900,
-        temperature: 0.8,
-        prompt: `You are an expert on local government policies, citizen schemes, and administrative updates in India.
+      // Impose a 4.5s timeout so client never encounters slow network latency or connection drops
+      const raw = await Promise.race([
+        generateText({
+          maxTokens: 800,
+          temperature: 0.6,
+          responseMimeType: "application/json",
+          prompt: `You are an expert on local government policies, citizen schemes, and administrative updates in India.
 Generate exactly 3 realistic local governance news updates, welfare schemes, or municipal policy announcements for the state of ${stateName}, India, set specifically in the current year 2026. Make the updates highly specific to ${stateName}.
 Provide the response as a strict JSON array of objects. Each object MUST have:
 1. "headline" (string, max 80 characters)
@@ -589,57 +625,76 @@ Provide the response as a strict JSON array of objects. Each object MUST have:
 4. "category" (string, e.g. "Welfare", "Infrastructure", "Agriculture", "Digital")
 5. "impact" (string)
 
-Do NOT include markdown code blocks, conversational text or backticks. Output only valid JSON.`,
-      });
-      const cleaned = raw.replace(/```json/g, "").replace(/```/g, "").trim();
-      const newsList = JSON.parse(cleaned);
-      return json({
-        success: true,
-        state: stateName,
-        news: newsList,
-        sources: [
-          { title: `${stateName} Gazette Portal`, url: "https://www.india.gov.in" },
-          { title: "National Portal of India", url: "https://www.india.gov.in" },
-        ],
-        fallbackUsed: false,
-      });
+Return only a valid JSON array.`,
+        }),
+        new Promise<string>((resolve) => setTimeout(() => resolve(""), 4500)),
+      ]);
+
+      let newsList: any[] = [];
+      if (raw && raw.trim()) {
+        const jsonMatch = raw.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          newsList = JSON.parse(jsonMatch[0]);
+        } else {
+          newsList = JSON.parse(raw.trim());
+        }
+      }
+
+      if (Array.isArray(newsList) && newsList.length > 0) {
+        const payload = {
+          success: true,
+          state: stateName,
+          news: newsList,
+          sources: [
+            { title: `${stateName} Gazette Portal`, url: "https://www.india.gov.in" },
+            { title: "National Portal of India", url: "https://www.india.gov.in" },
+          ],
+          fallbackUsed: false,
+        };
+        stateNewsCache.set(cacheKey, { timestamp: Date.now(), payload });
+        return json(payload);
+      }
     } catch {
-      return json({
-        success: true,
-        state: stateName,
-        news: [
-          {
-            headline: `${stateName} Administration Elevates e-Seva Outpost Digitalization`,
-            summary: `Under the regional digital empowerment act, state administrative centers are linked with unified citizen single-window registration systems.`,
-            date: "June 12, 2026",
-            category: "Digital",
-            impact: "Directly minimizing certificate queue bottlenecks",
-          },
-          {
-            headline: `New State Rural Welfare and Farmer Grants Activated`,
-            summary: `Cabinet approves immediate budget layout adjustments directing funds directly into DBT bank accounts using linked Aadhaar IDs.`,
-            date: "June 10, 2026",
-            category: "Welfare",
-            impact: "Targeting thousands of agrarian families",
-          },
-          {
-            headline: `Citizen Redressal Charter Enforces Strict SLA Timelines`,
-            summary: `Department secretaries issued instructions enforcing a 48-hour completion SLA check on standard revenue grievances.`,
-            date: "June 08, 2026",
-            category: "Governance",
-            impact: "Benefitting rural citizen grievances",
-          },
-        ],
-        sources: [
-          { title: "National Portal of India", url: "https://www.india.gov.in" },
-          {
-            title: "State Gazette Central Directory",
-            url: "https://www.india.gov.in/my-government/state-union-territories-portals",
-          },
-        ],
-        fallbackUsed: true,
-      });
+      // Continue to fallback
     }
+
+    const fallbackPayload = {
+      success: true,
+      state: stateName,
+      news: [
+        {
+          headline: `${stateName} Administration Elevates e-Seva Outpost Digitalization`,
+          summary: `Under the regional digital empowerment act, state administrative centers are linked with unified citizen single-window registration systems.`,
+          date: "June 12, 2026",
+          category: "Digital",
+          impact: "Directly minimizing certificate queue bottlenecks",
+        },
+        {
+          headline: `New State Rural Welfare and Farmer Grants Activated`,
+          summary: `Cabinet approves immediate budget layout adjustments directing funds directly into DBT bank accounts using linked Aadhaar IDs.`,
+          date: "June 10, 2026",
+          category: "Welfare",
+          impact: "Targeting thousands of agrarian families",
+        },
+        {
+          headline: `Citizen Redressal Charter Enforces Strict SLA Timelines`,
+          summary: `Department secretaries issued instructions enforcing a 48-hour completion SLA check on standard revenue grievances.`,
+          date: "June 08, 2026",
+          category: "Governance",
+          impact: "Benefitting rural citizen grievances",
+        },
+      ],
+      sources: [
+        { title: "National Portal of India", url: "https://www.india.gov.in" },
+        {
+          title: "State Gazette Central Directory",
+          url: "https://www.india.gov.in/my-government/state-union-territories-portals",
+        },
+      ],
+      fallbackUsed: true,
+    };
+    stateNewsCache.set(cacheKey, { timestamp: Date.now(), payload: fallbackPayload });
+    return json(fallbackPayload);
   }
 
   // 8d. Discussions
@@ -652,8 +707,7 @@ Do NOT include markdown code blocks, conversational text or backticks. Output on
     if (!title || !policyArea || !content || !postedBy) {
       return json(
         {
-          error:
-            "Missing required discussion fields: title, policyArea, content, postedBy.",
+          error: "Missing required discussion fields: title, policyArea, content, postedBy.",
         },
         400,
       );
@@ -666,8 +720,7 @@ Do NOT include markdown code blocks, conversational text or backticks. Output on
       postedBy: String(postedBy).trim(),
       profileStatus: profileStatus || "Unverified Citizen",
       verificationCount: profileStatus === "Aadhaar Verified" ? 1 : 0,
-      verifiedCitizens:
-        profileStatus === "Aadhaar Verified" ? [String(postedBy).trim()] : [],
+      verifiedCitizens: profileStatus === "Aadhaar Verified" ? [String(postedBy).trim()] : [],
       comments: [],
       timestamp: new Date().toISOString(),
       status: "PROPOSED",
@@ -719,7 +772,7 @@ Do NOT include markdown code blocks, conversational text or backticks. Output on
   }
 
   // 9. Suvidha Sahayak chatbot
-  if (path === "/chatbot" && method === "POST") {
+  if ((path === "/chatbot" || path === "/chat") && method === "POST") {
     const { messages } = body;
     if (!messages || !Array.isArray(messages)) {
       return json({ error: "Messages array required" }, 400);
@@ -732,7 +785,11 @@ You are safe, polite "PM e-Seva Suvidha Sahayak" - the flagship administrative A
 You help Indian citizens understand government services, criteria, prerequisites, documents, and schemes.
 
 Available e-Seva Services in this specific gateway:
-${JSON.stringify(officialServices.map((s) => ({ id: s.id, title: s.title, category: s.category })), null, 2)}
+${JSON.stringify(
+  officialServices.map((s) => ({ id: s.id, title: s.title, category: s.category })),
+  null,
+  2,
+)}
 
 Other Major Indian Citizen Schemes you can guide on:
 - Pradhan Mantri Garib Kalyan Anna Yojana (PM-GKAY)
@@ -763,11 +820,10 @@ Administrative Guidelines:
           content: m.text,
         })),
       });
-      return json({
-        text:
-          reply ||
-          "I apologize. I am unable to connect with the central server directory. Please check back shortly.",
-      });
+      if (reply && reply.trim()) {
+        return json({ text: reply.trim() });
+      }
+      throw new Error("Fallback required");
     } catch {
       let fallbackText =
         "Namaste! I am currently operating on offline backup files. Here is helpful information regarding Citizen Services:\n\n";

@@ -16,11 +16,14 @@ interface LegalPageProps {
 
 const NAV = [
   { to: "/about", label: "About" },
+  { to: "/citizen-guides", label: "Citizen Guides" },
+  { to: "/faq", label: "FAQ & Help" },
+  { to: "/editorial-policy", label: "Editorial Policy" },
+  { to: "/contact", label: "Contact" },
   { to: "/privacy", label: "Privacy" },
   { to: "/terms", label: "Terms" },
   { to: "/cookies", label: "Cookies" },
   { to: "/disclaimer", label: "Disclaimer" },
-  { to: "/contact", label: "Contact" },
 ] as const;
 
 export default function LegalPage({ title, subtitle, updated, sections }: LegalPageProps) {

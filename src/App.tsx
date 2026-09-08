@@ -1868,6 +1868,27 @@ export default function App() {
             </button>
             <span className="text-stone-300 dark:text-slate-700">|</span>
             <a
+              href="/citizen-guides"
+              className="hover:text-stone-900 dark:hover:text-white underline cursor-pointer transition font-semibold text-amber-700 dark:text-amber-400"
+            >
+              Citizen Guides
+            </a>
+            <span className="text-stone-300 dark:text-slate-700">|</span>
+            <a
+              href="/faq"
+              className="hover:text-stone-900 dark:hover:text-white underline cursor-pointer transition font-semibold text-emerald-700 dark:text-emerald-400"
+            >
+              FAQ Database
+            </a>
+            <span className="text-stone-300 dark:text-slate-700">|</span>
+            <a
+              href="/editorial-policy"
+              className="hover:text-stone-900 dark:hover:text-white underline cursor-pointer transition"
+            >
+              Editorial Policy
+            </a>
+            <span className="text-stone-300 dark:text-slate-700">|</span>
+            <a
               href="/privacy"
               className="hover:text-stone-900 dark:hover:text-white underline cursor-pointer transition"
             >

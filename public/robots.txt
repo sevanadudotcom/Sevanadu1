@@ -17,5 +17,7 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
-# Sitemap: add the absolute URL (https://your-domain/sitemap.xml) once the site is published.
+# Sitemap
+Sitemap: https://sewanadu.in/sitemap.xml
+Sitemap: /sitemap.xml
 
