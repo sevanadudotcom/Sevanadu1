@@ -1,0 +1,6 @@
+{
+  "name": "SewaNadu — Civic Policy & Governance Portal",
+  "description": "An independent directory of Indian central and state citizen e-services with guidelines, eligibility checks, document lists, and grievance assistance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -72,15 +72,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SewaNadu — Indian Citizen e-Service Directory" },
+      { title: "SewaNadu — Civic Policy & Governance Portal" },
       {
         name: "description",
         content:
-          "An independent directory of Indian central and state citizen e-services with guidelines, eligibility help and state governance bulletins.",
+          "An independent directory of Indian central and state citizen e-services with guidelines, eligibility checks, document lists, and grievance assistance.",
       },
       { name: "author", content: "SewaNadu" },
-      { property: "og:title", content: "SewaNadu — Indian Citizen e-Service Directory" },
-      { property: "og:description", content: "Explore Indian government services, eligibility, documents and grievance guidance in your language." },
+      { property: "og:title", content: "SewaNadu — Civic Policy & Governance Portal" },
+      { property: "og:description", content: "An independent directory of Indian central and state citizen e-services with guidelines, eligibility checks, document lists, and grievance assistance." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1" },

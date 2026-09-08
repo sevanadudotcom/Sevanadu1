@@ -4,7 +4,7 @@ import type { ESevaService } from "@/types";
 const officialServices: ESevaService[] = officialServicesList;
 
 // ---------------------------------------------------------------
-// AI helper (Lovable AI Gateway)
+// AI helper (Google Gemini API with Lovable Gateway fallback)
 // ---------------------------------------------------------------
 export async function generateText(params: {
   prompt: string;
@@ -13,35 +13,89 @@ export async function generateText(params: {
   maxTokens?: number;
   temperature?: number;
 }): Promise<string> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("AI gateway is not configured");
+  const geminiKey = process.env["GEMINI_API_KEY"];
+  if (geminiKey) {
+    const contents: { role: string; parts: { text: string }[] }[] = [];
+    if (params.messages?.length) {
+      for (const m of params.messages) {
+        contents.push({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }],
+        });
+      }
+    }
+    if (params.prompt) {
+      contents.push({
+        role: "user",
+        parts: [{ text: params.prompt }],
+      });
+    }
 
-  const messages: { role: string; content: string }[] = [];
-  if (params.system) messages.push({ role: "system", content: params.system });
-  if (params.messages?.length) messages.push(...params.messages);
-  if (params.prompt) messages.push({ role: "user", content: params.prompt });
+    const body: Record<string, unknown> = {
+      contents,
+      generationConfig: {
+        maxOutputTokens: params.maxTokens ?? 600,
+        temperature: params.temperature ?? 0.7,
+      },
+    };
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages,
-      max_tokens: params.maxTokens ?? 600,
-      temperature: params.temperature ?? 0.7,
-    }),
-  });
+    if (params.system) {
+      body.systemInstruction = {
+        parts: [{ text: params.system }],
+      };
+    }
 
-  if (!res.ok) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (res.ok) {
+      const data = (await res.json()) as {
+        candidates?: { content?: { parts?: { text?: string }[] } }[];
+      };
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (text) return text;
+    } else {
+      console.warn(`Gemini API error ${res.status}: ${await res.text()}`);
+    }
+  }
+
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  if (lovableKey) {
+    const messages: { role: string; content: string }[] = [];
+    if (params.system) messages.push({ role: "system", content: params.system });
+    if (params.messages?.length) messages.push(...params.messages);
+    if (params.prompt) messages.push({ role: "user", content: params.prompt });
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages,
+        max_tokens: params.maxTokens ?? 600,
+        temperature: params.temperature ?? 0.7,
+      }),
+    });
+
+    if (res.ok) {
+      const data = (await res.json()) as {
+        choices?: { message?: { content?: string } }[];
+      };
+      return data.choices?.[0]?.message?.content?.trim() ?? "";
+    }
     throw new Error(`AI gateway error ${res.status}: ${await res.text()}`);
   }
-  const data = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
-  };
-  return data.choices?.[0]?.message?.content?.trim() ?? "";
+
+  throw new Error("AI gateway is not configured (GEMINI_API_KEY or LOVABLE_API_KEY required)");
 }
 
 async function sha256Hex(input: string): Promise<string> {
