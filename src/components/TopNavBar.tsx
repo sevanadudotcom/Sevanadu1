@@ -792,6 +792,7 @@ export default function TopNavBar({
                     type="button"
                     onClick={() => {
                       setActiveTab(tab.id);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                       if (tab.id === "services") {
                         setSelectedService(null);
                       }
@@ -805,6 +806,7 @@ export default function TopNavBar({
                         : "text-stone-600 dark:text-stone-400 hover:text-stone-950 dark:hover:text-stone-100 hover:bg-stone-100/70 dark:hover:bg-stone-800/60"
                     }`}
                     title={tab.desc}
+                    aria-current={isActive ? "page" : undefined}
                   >
                     <Icon
                       className={`w-3.5 h-3.5 transition-colors ${

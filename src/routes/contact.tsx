@@ -17,10 +17,10 @@ export const Route = createFileRoute("/contact")({
           "Report corrections, request services, or contact us about privacy and advertising.",
       },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "/contact" },
+      { property: "og:url", content: "https://sewanadu.in/contact" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/contact" }],
+    links: [{ rel: "canonical", href: "https://sewanadu.in/contact" }],
   }),
   component: () => (
     <LegalPage

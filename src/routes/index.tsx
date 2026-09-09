@@ -22,8 +22,10 @@ export const Route = createFileRoute("/")({
           "Explore Indian government services, eligibility, documents and grievance guidance in your language. Independent, non-governmental information portal.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://sewanadu.in/" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://sewanadu.in/" }],
   }),
   component: HomePage,
 });

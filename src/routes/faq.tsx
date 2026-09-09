@@ -33,10 +33,10 @@ export const Route = createFileRoute("/faq")({
           "Authoritative legal and operational explanations for Indian central and state citizen e-services.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "/faq" },
+      { property: "og:url", content: "https://sewanadu.in/faq" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/faq" }],
+    links: [{ rel: "canonical", href: "https://sewanadu.in/faq" }],
   }),
   component: FaqStandalonePage,
 });
