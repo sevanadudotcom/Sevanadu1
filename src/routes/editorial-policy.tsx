@@ -17,10 +17,10 @@ export const Route = createFileRoute("/editorial-policy")({
           "Learn how SewaNadu verifies government service rules, ensures editorial independence, and handles corrections.",
       },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "/editorial-policy" },
+      { property: "og:url", content: "https://sewanadu.in/editorial-policy" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/editorial-policy" }],
+    links: [{ rel: "canonical", href: "https://sewanadu.in/editorial-policy" }],
   }),
   component: () => (
     <LegalPage

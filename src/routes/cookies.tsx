@@ -16,10 +16,10 @@ export const Route = createFileRoute("/cookies")({
         content: "Essential, preference and advertising cookies used on SewaNadu, and how to opt out.",
       },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "/cookies" },
+      { property: "og:url", content: "https://sewanadu.in/cookies" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/cookies" }],
+    links: [{ rel: "canonical", href: "https://sewanadu.in/cookies" }],
   }),
   component: () => (
     <LegalPage

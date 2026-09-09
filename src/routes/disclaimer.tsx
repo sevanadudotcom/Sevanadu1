@@ -16,10 +16,10 @@ export const Route = createFileRoute("/disclaimer")({
         content: "No government affiliation, no guarantees of accuracy, and no processing of applications.",
       },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "/disclaimer" },
+      { property: "og:url", content: "https://sewanadu.in/disclaimer" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/disclaimer" }],
+    links: [{ rel: "canonical", href: "https://sewanadu.in/disclaimer" }],
   }),
   component: () => (
     <LegalPage

@@ -16,10 +16,10 @@ export const Route = createFileRoute("/terms")({
         content: "Acceptable use, accuracy limits, intellectual property and liability terms for SewaNadu.",
       },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "/terms" },
+      { property: "og:url", content: "https://sewanadu.in/terms" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/terms" }],
+    links: [{ rel: "canonical", href: "https://sewanadu.in/terms" }],
   }),
   component: () => (
     <LegalPage

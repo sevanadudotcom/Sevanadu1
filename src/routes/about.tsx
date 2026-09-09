@@ -17,10 +17,10 @@ export const Route = createFileRoute("/about")({
           "An independent citizen guide to Indian central and state government services — our mission, method and editorial standards.",
       },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "/about" },
+      { property: "og:url", content: "https://sewanadu.in/about" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/about" }],
+    links: [{ rel: "canonical", href: "https://sewanadu.in/about" }],
   }),
   component: () => (
     <LegalPage

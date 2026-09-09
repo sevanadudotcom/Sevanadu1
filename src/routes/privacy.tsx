@@ -17,10 +17,10 @@ export const Route = createFileRoute("/privacy")({
           "Our privacy practices: local browser storage, cookies, Google AdSense and third-party vendor disclosures.",
       },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "/privacy" },
+      { property: "og:url", content: "https://sewanadu.in/privacy" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/privacy" }],
+    links: [{ rel: "canonical", href: "https://sewanadu.in/privacy" }],
   }),
   component: () => (
     <LegalPage

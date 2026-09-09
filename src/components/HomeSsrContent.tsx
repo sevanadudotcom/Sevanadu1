@@ -225,6 +225,11 @@ export default function HomeSsrContent() {
               departments, eligibility, required proofs, citizen charter timelines, and statutory
               fees.
             </p>
+            <p className="text-xs text-stone-500 mt-2 max-w-3xl">
+              <strong>Editorial review:</strong> 5 August 2026. Fees and timelines below are
+              indicative summaries, not guarantees; the linked official portal and current citizen
+              charter are the final source before you submit an application.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -653,6 +658,151 @@ export default function HomeSsrContent() {
                 </a>
               </div>
             </article>
+          </div>
+        </section>
+
+        <section id="citizen-workflows" className="space-y-6">
+          <div className="border-b border-stone-200 pb-4">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-blue-700">
+              Plan Before You Apply
+            </span>
+            <h2 className="font-display text-2xl sm:text-3xl font-black text-stone-950 mt-1">
+              Choose the right route for your citizen service
+            </h2>
+            <p className="text-sm text-stone-600 mt-1 max-w-3xl">
+              Central services use one national process, while certificates and local benefits are
+              usually decided by the state, district, or municipality where you live. Start with the
+              category that matches your goal, then confirm the final checklist on the official
+              portal.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <article className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-3">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <h3 className="font-display font-bold text-base text-stone-900">
+                Central identity and records
+              </h3>
+              <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                Aadhaar, PAN, passports, DigiLocker, voter records, driving licences, ABHA and
+                e-Shram use national departments or shared platforms. Your name, date of birth,
+                mobile number and address should match across the proofs you submit.
+              </p>
+              <a
+                href="#services-catalog"
+                className="inline-flex items-center gap-1 mt-3 text-xs font-bold text-amber-700 hover:underline"
+              >
+                Compare identity services <ArrowRight className="w-3 h-3" />
+              </a>
+            </article>
+
+            <article className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center mb-3">
+                <Award className="w-5 h-5" />
+              </div>
+              <h3 className="font-display font-bold text-base text-stone-900">
+                State certificates and benefits
+              </h3>
+              <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                Income, caste, domicile, residence, ration and land-record services follow local
+                rules. Fees, acceptable proofs, issuing officers and appeal deadlines can differ by
+                state and district, so a central checklist is only a starting point.
+              </p>
+              <Link
+                to="/citizen-guides"
+                className="inline-flex items-center gap-1 mt-3 text-xs font-bold text-amber-700 hover:underline"
+              >
+                Read the state certificate guide <ArrowRight className="w-3 h-3" />
+              </Link>
+            </article>
+
+            <article className="bg-white p-5 rounded-2xl border border-stone-200 shadow-xs">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-3">
+                <Users className="w-5 h-5" />
+              </div>
+              <h3 className="font-display font-bold text-base text-stone-900">
+                Welfare and public assistance
+              </h3>
+              <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                Schemes such as PM-Kisan, PM-JAY and food benefits combine eligibility rules with
+                identity, land, income or bank verification. An application can be eligible but
+                still wait for e-KYC, land seeding, NPCI mapping or local verification.
+              </p>
+              <Link
+                to="/faq"
+                className="inline-flex items-center gap-1 mt-3 text-xs font-bold text-amber-700 hover:underline"
+              >
+                Check welfare FAQs <ArrowRight className="w-3 h-3" />
+              </Link>
+            </article>
+          </div>
+
+          <div className="bg-stone-900 text-stone-200 p-6 sm:p-8 rounded-3xl">
+            <div className="flex items-start gap-3">
+              <Search className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-display font-bold text-lg text-white">
+                  A five-step application preparation checklist
+                </h3>
+                <p className="text-xs text-stone-400 mt-1">
+                  Use this workflow for both national portals and state e-District applications.
+                </p>
+              </div>
+            </div>
+            <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-5 text-xs">
+              <li className="bg-stone-800/80 p-3 rounded-xl">
+                <strong className="text-amber-400 block">1. Identify</strong>
+                <span className="text-stone-300">
+                  Select the exact service and state authority.
+                </span>
+              </li>
+              <li className="bg-stone-800/80 p-3 rounded-xl">
+                <strong className="text-amber-400 block">2. Check</strong>
+                <span className="text-stone-300">
+                  Confirm eligibility, age, residence and scheme conditions.
+                </span>
+              </li>
+              <li className="bg-stone-800/80 p-3 rounded-xl">
+                <strong className="text-amber-400 block">3. Prepare</strong>
+                <span className="text-stone-300">
+                  Scan readable proofs and keep originals for verification.
+                </span>
+              </li>
+              <li className="bg-stone-800/80 p-3 rounded-xl">
+                <strong className="text-amber-400 block">4. Submit</strong>
+                <span className="text-stone-300">
+                  Use the official portal, pay only its displayed fee and save the receipt.
+                </span>
+              </li>
+              <li className="bg-stone-800/80 p-3 rounded-xl">
+                <strong className="text-amber-400 block">5. Follow up</strong>
+                <span className="text-stone-300">
+                  Track the ARN, note the due date and appeal a delay through the proper channel.
+                </span>
+              </li>
+            </ol>
+            <div className="flex flex-wrap gap-3 mt-5 text-xs font-bold">
+              <a
+                href="/?tab=eligibility#citizen-workflows"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-stone-950 hover:bg-amber-400"
+              >
+                Open eligibility checker <ArrowRight className="w-3 h-3" />
+              </a>
+              <a
+                href="/?tab=sitemap#services-catalog"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-stone-600 px-3 py-2 text-stone-100 hover:bg-stone-800"
+              >
+                Browse full catalog <ArrowRight className="w-3 h-3" />
+              </a>
+              <Link
+                to="/faq"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-stone-600 px-3 py-2 text-stone-100 hover:bg-stone-800"
+              >
+                Read troubleshooting answers <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
           </div>
         </section>
 

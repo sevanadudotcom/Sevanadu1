@@ -33,10 +33,10 @@ export const Route = createFileRoute("/citizen-guides")({
           "Comprehensive procedural guides, statutory timelines, required documents, and appeal procedures for central and state public services.",
       },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: "/citizen-guides" },
+      { property: "og:url", content: "https://sewanadu.in/citizen-guides" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "/citizen-guides" }],
+    links: [{ rel: "canonical", href: "https://sewanadu.in/citizen-guides" }],
   }),
   component: CitizenGuidesPage,
 });
