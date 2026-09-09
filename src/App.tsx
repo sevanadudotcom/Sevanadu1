@@ -706,8 +706,40 @@ export default function App() {
         </p>
       </div>
 
-      {/* 2. SewaNadu Brand Header */}
-      <header className="bg-gradient-to-b from-brand-cream-bg to-stone-50 border-b border-stone-200/85 shrink-0 relative shadow-xs">
+      <TopNavBar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedService={selectedService}
+        setSelectedService={setSelectedService}
+        setActiveDossier={setActiveDossier}
+        getAutoSuggestions={getAutoSuggestions}
+        translateService={translateService}
+        savedServiceIds={savedServiceIds}
+        setIsSavedServicesOpen={setIsSavedServicesOpen}
+        isMobileSearchOpen={isMobileSearchOpen}
+        setIsMobileSearchOpen={setIsMobileSearchOpen}
+        isMobileMoreOpen={isMobileMoreOpen}
+        setIsMobileMoreOpen={setIsMobileMoreOpen}
+        setIsRtiOpen={setIsRtiOpen}
+        setIsStatusCheckOpen={setIsStatusCheckOpen}
+        setShowLauncher={setShowLauncher}
+        authUser={authUser}
+        handleGoogleSignIn={handleGoogleSignIn}
+        handleGoogleSignOut={handleGoogleSignOut}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+        triggerToast={triggerToast}
+        language={language}
+        setLanguage={setLanguage}
+        t={t}
+        INDIAN_LANGUAGES={INDIAN_LANGUAGES}
+        logoPulse={logoPulse}
+        setLegalHubDefaultSection={setLegalHubDefaultSection}
+      />
+
+      <header className="hidden bg-gradient-to-b from-brand-cream-bg to-stone-50 border-b border-stone-200/85 shrink-0 relative shadow-xs">
         <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3 sm:gap-4 flex-nowrap">
           {/* Logo Brand Emblems: Orange coral circle, :: white dots layout and "SewaNadu" */}
           <motion.div
@@ -1114,7 +1146,7 @@ export default function App() {
       )}
 
       {/* 4. Interactive Navigation Tabs Panel (Desktop & Tablet only) */}
-      <div className="hidden md:block bg-white border-b border-gray-200 shrink-0 sticky top-0 z-40 shadow-xs select-none">
+      <div className="hidden bg-white border-b border-gray-200 shrink-0 sticky top-0 z-40 shadow-xs select-none">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex overflow-x-auto gap-1 -mb-px pt-1.5 scrollbar-none">
             <button
