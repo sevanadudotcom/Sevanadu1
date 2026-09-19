@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LegalPage from "@/components/LegalPage";
+import { getRouteJsonLdScript } from "@/components/SEOHead";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/privacy")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "https://sewanadu.in/privacy" }],
+    scripts: [getRouteJsonLdScript("/privacy")],
   }),
   component: () => (
     <LegalPage
@@ -81,11 +83,19 @@ export const Route = createFileRoute("/privacy")({
                 </li>
                 <li>
                   Users may opt out of personalised advertising by visiting{" "}
-                  <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer nofollow">
+                  <a
+                    href="https://www.google.com/settings/ads"
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                  >
                     Google Ads Settings
                   </a>
                   , or opt out of third-party vendor cookies at{" "}
-                  <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer nofollow">
+                  <a
+                    href="https://www.aboutads.info/choices/"
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                  >
                     aboutads.info/choices
                   </a>
                   .

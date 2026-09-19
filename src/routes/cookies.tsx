@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LegalPage from "@/components/LegalPage";
+import { getRouteJsonLdScript } from "@/components/SEOHead";
 
 export const Route = createFileRoute("/cookies")({
   head: () => ({
@@ -13,13 +14,15 @@ export const Route = createFileRoute("/cookies")({
       { property: "og:title", content: "Cookie Policy — SewaNadu" },
       {
         property: "og:description",
-        content: "Essential, preference and advertising cookies used on SewaNadu, and how to opt out.",
+        content:
+          "Essential, preference and advertising cookies used on SewaNadu, and how to opt out.",
       },
       { property: "og:type", content: "article" },
       { property: "og:url", content: "https://sewanadu.in/cookies" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "https://sewanadu.in/cookies" }],
+    scripts: [getRouteJsonLdScript("/cookies")],
   }),
   component: () => (
     <LegalPage
@@ -66,11 +69,19 @@ export const Route = createFileRoute("/cookies")({
             <p>
               Third-party vendors, including Google, use cookies to serve ads based on your prior
               visits to this and other websites. You can opt out of personalised advertising at{" "}
-              <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer nofollow">
+              <a
+                href="https://www.google.com/settings/ads"
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+              >
                 Google Ads Settings
               </a>{" "}
               or{" "}
-              <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer nofollow">
+              <a
+                href="https://www.aboutads.info/choices/"
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+              >
                 aboutads.info/choices
               </a>
               .

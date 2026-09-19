@@ -3,6 +3,7 @@ import { ClientOnly } from "@tanstack/react-router";
 import React, { Suspense } from "react";
 import { LanguageProvider } from "@/LanguageContext";
 import HomeSsrContent from "@/components/HomeSsrContent";
+import { getRouteJsonLdScript } from "@/components/SEOHead";
 
 const App = React.lazy(() => import("@/App"));
 
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "https://sewanadu.in/" }],
+    scripts: [getRouteJsonLdScript("/")],
   }),
   component: HomePage,
 });

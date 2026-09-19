@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LegalPage from "@/components/LegalPage";
+import { getRouteJsonLdScript } from "@/components/SEOHead";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/about")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "https://sewanadu.in/about" }],
+    scripts: [getRouteJsonLdScript("/about")],
   }),
   component: () => (
     <LegalPage

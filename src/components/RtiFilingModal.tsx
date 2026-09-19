@@ -1,9 +1,22 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  X, Scale, ArrowRight, ShieldCheck, CreditCard, Check, 
-  HelpCircle, Sparkles, Building2, User, FileText, LayoutList 
+import {
+  X,
+  Scale,
+  ArrowRight,
+  ShieldCheck,
+  CreditCard,
+  Check,
+  HelpCircle,
+  Sparkles,
+  Building2,
+  User,
+  FileText,
+  LayoutList,
+  Printer,
+  Download,
 } from "lucide-react";
+import { printRtiDocument } from "../utils/rtiPrintHelper";
 
 interface RtiFilingModalProps {
   isOpen: boolean;
@@ -14,19 +27,23 @@ interface RtiFilingModalProps {
 
 const PUBLIC_AUTHORITIES = [
   { id: "dopt", en: "Department of Personnel & Training", hi: "कार्मिक और प्रशिक्षण विभाग" },
-  { id: "uidai", en: "Unique Identification Authority of India (UIDAI)", hi: "भारतीय विशिष्ट पहचान प्राधिकरण (UIDAI)" },
+  {
+    id: "uidai",
+    en: "Unique Identification Authority of India (UIDAI)",
+    hi: "भारतीय विशिष्ट पहचान प्राधिकरण (UIDAI)",
+  },
   { id: "mha", en: "Ministry of Home Affairs", hi: "गृह मंत्रालय" },
   { id: "mor", en: "Ministry of Railways", hi: "रेल मंत्रालय" },
   { id: "mhrd", en: "Ministry of Education (formerly MHRD)", hi: "शिक्षा मंत्रालय" },
   { id: "revenue", en: "Department of Revenue", hi: "राजस्व विभाग" },
-  { id: "eci", en: "Election Commission of India (ECI)", hi: "भारत निर्वाचन आयोग" }
+  { id: "eci", en: "Election Commission of India (ECI)", hi: "भारत निर्वाचन आयोग" },
 ];
 
 export default function RtiFilingModal({
   isOpen,
   onClose,
   language,
-  triggerToast
+  triggerToast,
 }: RtiFilingModalProps) {
   const [step, setStep] = useState<"form" | "payment" | "receipt">("form");
   const [auth, setAuth] = useState("");
@@ -39,7 +56,7 @@ export default function RtiFilingModal({
   const [paymentMode, setPaymentMode] = useState<"upi" | "netbanking" | "card">("upi");
   const [upiId, setUpiId] = useState("");
   const [isPaying, setIsPaying] = useState(false);
-  
+
   // Last generated receipt
   const [receipt, setReceipt] = useState<{
     id: string;
@@ -58,15 +75,24 @@ export default function RtiFilingModal({
   const handleNextToPayment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) {
-      triggerToast(isHi ? "कृपया सार्वजनिक प्राधिकरण चुनें।" : "Please select a Public Authority.", "error");
+      triggerToast(
+        isHi ? "कृपया सार्वजनिक प्राधिकरण चुनें।" : "Please select a Public Authority.",
+        "error",
+      );
       return;
     }
     if (!name || !email || !query) {
-      triggerToast(isHi ? "कृपया सभी आवश्यक फ़ील्ड भरें।" : "Please fill in all mandatory fields.", "error");
+      triggerToast(
+        isHi ? "कृपया सभी आवश्यक फ़ील्ड भरें।" : "Please fill in all mandatory fields.",
+        "error",
+      );
       return;
     }
     if (isBplExempt && !bplCardNo) {
-      triggerToast(isHi ? "कृपया बीपीएल कार्ड संख्या दर्ज करें।" : "Please enter your BPL card number.", "error");
+      triggerToast(
+        isHi ? "कृपया बीपीएल कार्ड संख्या दर्ज करें।" : "Please enter your BPL card number.",
+        "error",
+      );
       return;
     }
 
@@ -80,12 +106,17 @@ export default function RtiFilingModal({
         query,
         date: new Date().toLocaleString(),
         feesPaid: 0,
-        bplNo: bplCardNo
+        bplNo: bplCardNo,
       };
       setReceipt(completedReceipt);
       saveFilingLocally(completedReceipt);
       setStep("receipt");
-      triggerToast(isHi ? "RTI आवेदन सफलतापूर्वक दर्ज किया गया।" : "RTI Request submitted successfully under BPL category.", "success");
+      triggerToast(
+        isHi
+          ? "RTI आवेदन सफलतापूर्वक दर्ज किया गया।"
+          : "RTI Request submitted successfully under BPL category.",
+        "success",
+      );
     } else {
       setStep("payment");
     }
@@ -106,16 +137,16 @@ export default function RtiFilingModal({
         name,
         query,
         date: new Date().toLocaleString(),
-        feesPaid: 10
+        feesPaid: 10,
       };
       setReceipt(completedReceipt);
       saveFilingLocally(completedReceipt);
       setStep("receipt");
       triggerToast(
-        isHi 
-          ? "भुगतान सफल! ₹10 प्राप्त हुए। RTI दर्ज की गई।" 
-          : "Payment Successful! ₹10 charged. RTI filed successfully.", 
-        "success"
+        isHi
+          ? "भुगतान सफल! ₹10 प्राप्त हुए। RTI दर्ज की गई।"
+          : "Payment Successful! ₹10 charged. RTI filed successfully.",
+        "success",
       );
     }, 2000);
   };
@@ -132,9 +163,49 @@ export default function RtiFilingModal({
   };
 
   const getAuthName = (id: string) => {
-    const found = PUBLIC_AUTHORITIES.find(p => p.id === id);
+    const found = PUBLIC_AUTHORITIES.find((p) => p.id === id);
     if (!found) return id;
     return isHi ? found.hi : found.en;
+  };
+
+  const handlePrintDraft = () => {
+    printRtiDocument(
+      "application",
+      {
+        auth: auth || "Public Authority (Central/State)",
+        authName: getAuthName(auth),
+        name: name.trim() || (isHi ? "आवेदक (नागरिक)" : "Applicant (Citizen)"),
+        email: email.trim() || "citizen@gov.in",
+        phone: phone.trim() || undefined,
+        query:
+          query.trim() ||
+          (isHi
+            ? "आरटीआई अधिनियम, 2005 की धारा 6(1) के अंतर्गत सार्वजनिक अभिलेखों का प्रकटीकरण।"
+            : "Statutory disclosure of certified documents under Section 6(1) of the RTI Act, 2005."),
+        feesPaid: isBplExempt ? 0 : 10,
+        bplNo: isBplExempt ? bplCardNo || "BPL Verified" : undefined,
+      },
+      language,
+      triggerToast,
+    );
+  };
+
+  const handlePrintReceipt = () => {
+    if (!receipt) {
+      handlePrintDraft();
+      return;
+    }
+    printRtiDocument(
+      "receipt",
+      {
+        ...receipt,
+        authName: getAuthName(receipt.auth),
+        email,
+        phone,
+      },
+      language,
+      triggerToast,
+    );
   };
 
   return (
@@ -164,19 +235,44 @@ export default function RtiFilingModal({
               </h3>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full transition cursor-pointer text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 border-0 bg-transparent"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={step === "receipt" ? handlePrintReceipt : handlePrintDraft}
+              className="flex items-center gap-1 px-2.5 py-1 text-[10.5px] font-bold text-stone-700 hover:text-stone-900 dark:text-stone-300 dark:hover:text-white bg-amber-500/10 hover:bg-amber-500/20 dark:bg-amber-400/10 dark:hover:bg-amber-400/20 border border-amber-500/25 rounded-lg transition cursor-pointer"
+              title={
+                step === "receipt"
+                  ? isHi
+                    ? "RTI पावती रसीद प्रिंट करें"
+                    : "Print RTI Official Receipt"
+                  : isHi
+                    ? "RTI आवेदन प्रारूप प्रिंट करें"
+                    : "Print RTI Application Form A"
+              }
+            >
+              <Printer className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="hidden sm:inline">
+                {step === "receipt"
+                  ? isHi
+                    ? "रसीद प्रिंट"
+                    : "Print Slip"
+                  : isHi
+                    ? "प्रारूप प्रिंट"
+                    : "Print Form"}
+              </span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full transition cursor-pointer text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 border-0 bg-transparent"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Dynamic content scroll area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          
           <AnimatePresence mode="wait">
-            
             {/* STEP 1: FORM */}
             {step === "form" && (
               <motion.form
@@ -210,7 +306,9 @@ export default function RtiFilingModal({
                       required
                       className="w-full pl-10 pr-4 py-2.5 text-xs font-sans border border-stone-250 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-850 dark:text-white focus:ring-1 focus:ring-amber-500 outline-none cursor-pointer"
                     >
-                      <option value="">{isHi ? "-- विभाग चुनें --" : "-- Select Department --"}</option>
+                      <option value="">
+                        {isHi ? "-- विभाग चुनें --" : "-- Select Department --"}
+                      </option>
                       {PUBLIC_AUTHORITIES.map((p) => (
                         <option key={p.id} value={p.id}>
                           {isHi ? p.hi : p.en}
@@ -278,10 +376,14 @@ export default function RtiFilingModal({
                       />
                       <div>
                         <span className="text-[11px] font-bold text-stone-900 dark:text-white block">
-                          {isHi ? "क्या आप गरीबी रेखा के नीचे हैं? (BPL Exemption)" : "BPL Cardholder Exemption"}
+                          {isHi
+                            ? "क्या आप गरीबी रेखा के नीचे हैं? (BPL Exemption)"
+                            : "BPL Cardholder Exemption"}
                         </span>
                         <span className="text-[9.5px] text-stone-500 dark:text-stone-400 block font-normal">
-                          {isHi ? "RTI शुल्क (₹10) पूरी तरह माफ" : "No filing fee. Requires valid BPL Card."}
+                          {isHi
+                            ? "RTI शुल्क (₹10) पूरी तरह माफ"
+                            : "No filing fee. Requires valid BPL Card."}
                         </span>
                       </div>
                     </label>
@@ -313,9 +415,13 @@ export default function RtiFilingModal({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="block text-[10px] font-black uppercase text-stone-500 dark:text-stone-400 font-mono tracking-wider">
-                      {isHi ? "RTI सूचना अनुरोध (विवरण दर्ज करें) *" : "Specific Information Solicited *"}
+                      {isHi
+                        ? "RTI सूचना अनुरोध (विवरण दर्ज करें) *"
+                        : "Specific Information Solicited *"}
                     </label>
-                    <span className="text-[9.5px] font-mono text-stone-400">{query.length}/1200 chars</span>
+                    <span className="text-[9.5px] font-mono text-stone-400">
+                      {query.length}/1200 chars
+                    </span>
                   </div>
                   <div className="relative">
                     <FileText className="absolute left-3.5 top-3.5 w-4 h-4 text-stone-400" />
@@ -325,8 +431,8 @@ export default function RtiFilingModal({
                       required
                       rows={4}
                       placeholder={
-                        isHi 
-                          ? "कार्यालय का स्पष्ट संदर्भ दें और पूछे जाने वाले प्रश्न सटीक लिखें। (जैसे: 'कृपया वर्ष 2025-26 के दौरान वार्ड क्रमांक 12 में सड़कों के डामरीकरण हेतु स्वीकृत आवंटन तथा व्यय की प्रति उपलब्ध करवाएं।')" 
+                        isHi
+                          ? "कार्यालय का स्पष्ट संदर्भ दें और पूछे जाने वाले प्रश्न सटीक लिखें। (जैसे: 'कृपया वर्ष 2025-26 के दौरान वार्ड क्रमांक 12 में सड़कों के डामरीकरण हेतु स्वीकृत आवंटन तथा व्यय की प्रति उपलब्ध करवाएं।')"
                           : "Provide transparent query criteria. (e.g. 'Kindly furnish the complete copy of certified expenditure audits regarding development grants disbursed to administrative blocks of our regional district municipal office between April 2025 and March 2026.')"
                       }
                       className="w-full pl-10 pr-4 py-2.5 text-xs font-sans border border-stone-250 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-850 dark:text-white focus:ring-1 focus:ring-amber-500 outline-none"
@@ -334,13 +440,30 @@ export default function RtiFilingModal({
                   </div>
                 </div>
 
-                {/* Submit Action */}
-                <div className="pt-2">
+                {/* Submit and Print Actions */}
+                <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handlePrintDraft}
+                    className="flex-1 py-3 px-4 rounded-xl border border-stone-250 dark:border-stone-750 bg-stone-50 hover:bg-stone-100 dark:bg-stone-850 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-200 font-display font-bold text-xs uppercase tracking-wider transition active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-amber-600 dark:text-amber-500 shrink-0" />
+                    <span>{isHi ? "प्रारूप प्रिंट करें (Form A)" : "Print Draft (Form A)"}</span>
+                  </button>
+
                   <button
                     type="submit"
-                    className="w-full py-3 px-5 rounded-xl font-display font-black text-xs uppercase tracking-wider text-neutral-900 bg-amber-500 hover:bg-amber-400 shadow-sm active:scale-98 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="flex-1 py-3 px-5 rounded-xl font-display font-black text-xs uppercase tracking-wider text-neutral-900 bg-amber-500 hover:bg-amber-400 shadow-sm active:scale-98 transition flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <span>{isBplExempt ? (isHi ? "RTI सबमिट करें" : "Submit RTI Request") : (isHi ? "भुगतान एवं सबमिट करें" : "Proceed to Fee Payment")}</span>
+                    <span>
+                      {isBplExempt
+                        ? isHi
+                          ? "RTI सबमिट करें"
+                          : "Submit RTI Request"
+                        : isHi
+                          ? "भुगतान एवं सबमिट करें"
+                          : "Proceed to Fee Payment"}
+                    </span>
                     <ArrowRight className="w-3.5 h-3.5 stroke-[3]" />
                   </button>
                 </div>
@@ -384,8 +507,8 @@ export default function RtiFilingModal({
                       type="button"
                       onClick={() => setPaymentMode("upi")}
                       className={`p-3.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition cursor-pointer ${
-                        paymentMode === "upi" 
-                          ? "border-amber-500 bg-amber-500/10 text-amber-950 dark:text-amber-400" 
+                        paymentMode === "upi"
+                          ? "border-amber-500 bg-amber-500/10 text-amber-950 dark:text-amber-400"
                           : "border-stone-150 hover:border-stone-300 text-stone-600 hover:text-stone-900 bg-white dark:bg-stone-850 dark:text-white select-none"
                       }`}
                     >
@@ -397,26 +520,30 @@ export default function RtiFilingModal({
                       type="button"
                       onClick={() => setPaymentMode("netbanking")}
                       className={`p-3.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition cursor-pointer ${
-                        paymentMode === "netbanking" 
-                          ? "border-amber-500 bg-amber-500/10 text-amber-950 dark:text-amber-400" 
+                        paymentMode === "netbanking"
+                          ? "border-amber-500 bg-amber-500/10 text-amber-950 dark:text-amber-400"
                           : "border-stone-150 hover:border-stone-300 text-stone-600 hover:text-stone-900 bg-white dark:bg-stone-850 dark:text-white select-none"
                       }`}
                     >
                       <Building2 className="w-4 h-4 text-blue-500" />
-                      <span className="text-[10px] font-extrabold">{isHi ? "नेट बैंकिंग" : "NetBanking"}</span>
+                      <span className="text-[10px] font-extrabold">
+                        {isHi ? "नेट बैंकिंग" : "NetBanking"}
+                      </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setPaymentMode("card")}
                       className={`p-3.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition cursor-pointer ${
-                        paymentMode === "card" 
-                          ? "border-amber-500 bg-amber-500/10 text-amber-950 dark:text-amber-400" 
+                        paymentMode === "card"
+                          ? "border-amber-500 bg-amber-500/10 text-amber-950 dark:text-amber-400"
                           : "border-stone-150 hover:border-stone-300 text-stone-600 hover:text-stone-900 bg-white dark:bg-stone-850 dark:text-white select-none"
                       }`}
                     >
                       <CreditCard className="w-4 h-4 text-purple-500" />
-                      <span className="text-[10px] font-extrabold">{isHi ? "डेबिट/क्रेडिट कार्ड" : "Card Payment"}</span>
+                      <span className="text-[10px] font-extrabold">
+                        {isHi ? "डेबिट/क्रेडिट कार्ड" : "Card Payment"}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -446,8 +573,8 @@ export default function RtiFilingModal({
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 bg-stone-50 dark:bg-stone-850 border border-stone-150 dark:border-stone-800 rounded-2xl text-center text-stone-550 dark:text-stone-400 text-[11px]"
                   >
-                    {isHi 
-                      ? "लॉन्च के समय सुरक्षित e-Treasury गेटवे पुनर्निर्देशित किया जाएगा।" 
+                    {isHi
+                      ? "लॉन्च के समय सुरक्षित e-Treasury गेटवे पुनर्निर्देशित किया जाएगा।"
                       : "Clicking submit will redirect you securely to the national integrated e-Treasury system."}
                   </motion.div>
                 )}
@@ -498,10 +625,12 @@ export default function RtiFilingModal({
                   </div>
                   <div>
                     <h5 className="text-xs font-black text-emerald-900 dark:text-emerald-300">
-                      {isHi ? "RTI सबमिशन सफलतापूर्वक दायर किया गया" : "RTI Subvention Request Registered!"}
+                      {isHi
+                        ? "RTI सबमिशन सफलतापूर्वक दायर किया गया"
+                        : "RTI Subvention Request Registered!"}
                     </h5>
                     <p className="text-[10.5px] leading-relaxed text-emerald-800 dark:text-emerald-400 mt-1">
-                      {isHi 
+                      {isHi
                         ? `आवेदक ${receipt.name}। आपका भारतीय सूचना का कानून (RTI Act, 2005) के तहत आवेदन दर्ज किया गया है। कृपया त्वरित निपटान या आगे की प्रगति पर नजर रखने के लिए आवेदन संदर्भ कुंजी नोट करें।`
                         : `Applicant ${receipt.name}. Your formal request under the Right to Information Act, 2005 has been registered. Copy your Application Reference Key below to track verification milestones.`}
                     </p>
@@ -510,28 +639,43 @@ export default function RtiFilingModal({
 
                 {/* Receipt Card Graphic */}
                 <div className="border border-stone-200 dark:border-stone-800 rounded-2xl overflow-hidden shadow-2xs font-sans text-stone-800 dark:text-stone-300">
-                  <div className="p-4 bg-stone-50 dark:bg-stone-850/60 border-b border-stone-150 dark:border-stone-800 flex items-center justify-between pr-2">
+                  <div className="p-4 bg-stone-50 dark:bg-stone-850/60 border-b border-stone-150 dark:border-stone-800 flex items-center justify-between pr-3">
                     <div className="flex items-center gap-1.5">
                       <LayoutList className="w-4 h-4 text-stone-400" />
                       <span className="text-[10.5px] font-mono tracking-wider font-extrabold uppercase text-stone-500">
                         {isHi ? "आधिकारिक रसीद" : "Official Acknowledgement Slip"}
                       </span>
                     </div>
-                    <span className="text-[9.5px] font-mono font-black text-amber-600 dark:text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded animate-pulse">
-                      STATUS: SUBMITTED
-                    </span>
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={handlePrintReceipt}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/40 transition cursor-pointer border border-amber-300 dark:border-amber-800/60"
+                        title={isHi ? "रसीद प्रिंट करें" : "Print Acknowledgement Receipt"}
+                      >
+                        <Printer className="w-3 h-3" />
+                        <span>{isHi ? "प्रिंट" : "Print"}</span>
+                      </button>
+                      <span className="text-[9.5px] font-mono font-black text-amber-600 dark:text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded animate-pulse">
+                        STATUS: SUBMITTED
+                      </span>
+                    </div>
                   </div>
 
                   <div className="p-4 space-y-3.5 bg-white dark:bg-stone-900 leading-normal text-xs divide-y divide-stone-100 dark:divide-stone-850">
                     <div className="grid grid-cols-2 gap-4 pb-1">
                       <div>
-                        <span className="text-[9px] font-mono text-stone-450 uppercase block">Reference Number (REF)</span>
+                        <span className="text-[9px] font-mono text-stone-450 uppercase block">
+                          Reference Number (REF)
+                        </span>
                         <strong className="text-[12px] font-mono text-stone-900 dark:text-white block mt-0.5">
                           {receipt.id}
                         </strong>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] font-mono text-stone-450 uppercase block">Submission Date</span>
+                        <span className="text-[9px] font-mono text-stone-450 uppercase block">
+                          Submission Date
+                        </span>
                         <span className="font-mono text-[10.5px] text-stone-800 dark:text-stone-200 block mt-0.5">
                           {receipt.date}
                         </span>
@@ -539,21 +683,27 @@ export default function RtiFilingModal({
                     </div>
 
                     <div className="pt-3">
-                      <span className="text-[9px] font-mono text-stone-450 uppercase block">Authority Addressed</span>
+                      <span className="text-[9px] font-mono text-stone-450 uppercase block">
+                        Authority Addressed
+                      </span>
                       <p className="font-sans font-black text-stone-900 dark:text-white mt-1">
                         {getAuthName(receipt.auth)}
                       </p>
                     </div>
 
                     <div className="pt-3">
-                      <span className="text-[9px] font-mono text-stone-450 uppercase block">Applicant Coordinates</span>
+                      <span className="text-[9px] font-mono text-stone-450 uppercase block">
+                        Applicant Coordinates
+                      </span>
                       <p className="font-sans font-bold text-stone-800 dark:text-stone-200 mt-1">
                         {receipt.name} ({email})
                       </p>
                     </div>
 
                     <div className="pt-3 max-h-32 overflow-y-auto">
-                      <span className="text-[9px] font-mono text-stone-450 uppercase block">Soliciated Query Copy</span>
+                      <span className="text-[9px] font-mono text-stone-450 uppercase block">
+                        Soliciated Query Copy
+                      </span>
                       <p className="font-sans font-normal italic text-stone-650 dark:text-stone-400 mt-1 bg-stone-50 dark:bg-stone-850 p-2.5 rounded-xl border border-stone-150 dark:border-stone-800 leading-relaxed text-[10.5px]">
                         "{receipt.query}"
                       </p>
@@ -561,28 +711,69 @@ export default function RtiFilingModal({
 
                     <div className="grid grid-cols-2 gap-4 pt-3.5 leading-none">
                       <div>
-                        <span className="text-[9px] font-mono text-stone-450 uppercase block">Statutory Act Reference</span>
+                        <span className="text-[9px] font-mono text-stone-450 uppercase block">
+                          Statutory Act Reference
+                        </span>
                         <span className="text-[10px] font-mono text-stone-950 dark:text-stone-200 block mt-1">
                           RTI Act Sec 6(1)
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] font-mono text-stone-450 uppercase block">Fees Transaction</span>
+                        <span className="text-[9px] font-mono text-stone-450 uppercase block">
+                          Fees Transaction
+                        </span>
                         <span className="text-[10.5px] font-sans font-black text-amber-600 dark:text-amber-500 block mt-1">
-                          {receipt.feesPaid > 0 ? `₹${receipt.feesPaid}.00 (SUCCESS)` : `EXEMPTED (${receipt.bplNo})`}
+                          {receipt.feesPaid > 0
+                            ? `₹${receipt.feesPaid}.00 (SUCCESS)`
+                            : `EXEMPTED (${receipt.bplNo})`}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="p-3 bg-stone-50 dark:bg-stone-850 border-t border-stone-150 dark:border-stone-800 text-[10px] text-stone-500 text-center font-mono">
-                    {isHi 
-                      ? "सूचना का प्रकटन नियमानुसार 30 दिनों के भीतर किया जाएगा।" 
+                    {isHi
+                      ? "सूचना का प्रकटन नियमानुसार 30 दिनों के भीतर किया जाएगा।"
                       : "Expected response date: within 30 days of registration."}
                   </div>
                 </div>
 
-                <div className="pt-2">
+                {/* Print and Return actions */}
+                <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handlePrintReceipt}
+                    className="flex-1 py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider text-neutral-900 bg-amber-500 hover:bg-amber-400 shadow-sm active:scale-98 transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Printer className="w-4 h-4 text-neutral-950 shrink-0" />
+                    <span>{isHi ? "आधिकारिक रसीद प्रिंट करें" : "Print Official Receipt"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (receipt) {
+                        printRtiDocument(
+                          "application",
+                          {
+                            ...receipt,
+                            authName: getAuthName(receipt.auth),
+                            email,
+                            phone,
+                          },
+                          language,
+                          triggerToast,
+                        );
+                      }
+                    }}
+                    className="py-3 px-4 rounded-xl border border-stone-250 dark:border-stone-750 bg-white hover:bg-stone-50 dark:bg-stone-850 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-200 font-display font-bold text-xs uppercase tracking-wider transition active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 text-amber-600 dark:text-amber-500 shrink-0" />
+                    <span>{isHi ? "फॉर्म 'क' प्रिंट" : "Print Form 'A'"}</span>
+                  </button>
+                </div>
+
+                <div className="pt-0.5">
                   <button
                     type="button"
                     onClick={() => {
@@ -591,16 +782,16 @@ export default function RtiFilingModal({
                       setQuery("");
                       onClose();
                     }}
-                    className="w-full py-3 px-4 rounded-xl font-display font-black text-xs uppercase tracking-wider text-white bg-slate-900 hover:bg-slate-800 shadow-sm active:scale-98 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-xl font-display font-bold text-xs text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-850 transition flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <span>{isHi ? "पंजीकरण समाप्त करें" : "Return to Dashboard"}</span>
+                    <span>
+                      {isHi ? "पंजीकरण समाप्त करें व डैशबोर्ड लौटें" : "Done / Return to Dashboard"}
+                    </span>
                   </button>
                 </div>
               </motion.div>
             )}
-
           </AnimatePresence>
-
         </div>
       </motion.div>
     </div>

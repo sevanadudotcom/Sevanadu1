@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LegalPage from "@/components/LegalPage";
+import { getRouteJsonLdScript } from "@/components/SEOHead";
 
 export const Route = createFileRoute("/disclaimer")({
   head: () => ({
@@ -13,13 +14,15 @@ export const Route = createFileRoute("/disclaimer")({
       { property: "og:title", content: "Disclaimer — SewaNadu" },
       {
         property: "og:description",
-        content: "No government affiliation, no guarantees of accuracy, and no processing of applications.",
+        content:
+          "No government affiliation, no guarantees of accuracy, and no processing of applications.",
       },
       { property: "og:type", content: "article" },
       { property: "og:url", content: "https://sewanadu.in/disclaimer" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "https://sewanadu.in/disclaimer" }],
+    scripts: [getRouteJsonLdScript("/disclaimer")],
   }),
   component: () => (
     <LegalPage

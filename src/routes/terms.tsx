@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LegalPage from "@/components/LegalPage";
+import { getRouteJsonLdScript } from "@/components/SEOHead";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -13,13 +14,15 @@ export const Route = createFileRoute("/terms")({
       { property: "og:title", content: "Terms & Conditions — SewaNadu" },
       {
         property: "og:description",
-        content: "Acceptable use, accuracy limits, intellectual property and liability terms for SewaNadu.",
+        content:
+          "Acceptable use, accuracy limits, intellectual property and liability terms for SewaNadu.",
       },
       { property: "og:type", content: "article" },
       { property: "og:url", content: "https://sewanadu.in/terms" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "https://sewanadu.in/terms" }],
+    scripts: [getRouteJsonLdScript("/terms")],
   }),
   component: () => (
     <LegalPage
@@ -60,8 +63,8 @@ export const Route = createFileRoute("/terms")({
               </p>
               <p>
                 Certain features on this site — including application status demonstrations, digital
-                locker previews and AI-generated replies — are illustrative simulations for
-                learning purposes. They do not create, submit or track any real government record.
+                locker previews and AI-generated replies — are illustrative simulations for learning
+                purposes. They do not create, submit or track any real government record.
               </p>
             </>
           ),
