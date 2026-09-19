@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "@tanstack/react-router";
+import SEOHead from "@/components/SEOHead";
 import {
   ShieldCheck,
   FileText,
@@ -28,6 +29,7 @@ import {
 export default function HomeSsrContent() {
   return (
     <div className="min-h-screen bg-[#FCFBF7] text-stone-900 font-sans">
+      <SEOHead path="/" />
       {/* Top Advisory Bar */}
       <div className="bg-stone-900 text-stone-200 text-xs py-2 px-4 border-b border-stone-800">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">

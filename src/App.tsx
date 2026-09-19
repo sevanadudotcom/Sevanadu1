@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Building2,
   Landmark,
@@ -41,6 +41,8 @@ import {
   ClipboardCheck,
   Users,
   LogIn,
+  X,
+  ArrowUpDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { onAuthStateChanged, signInWithPopup, signOut, User as FirebaseUser } from "firebase/auth";
@@ -69,6 +71,7 @@ import StatusCheckModal from "./components/StatusCheckModal";
 import VerifiedDiscussions from "./components/VerifiedDiscussions";
 import VoiceSearch from "./components/VoiceSearch";
 import TopNavBar from "./components/TopNavBar";
+import SEOHead from "./components/SEOHead";
 import { getApiUrl } from "./lib/api";
 
 export default function App() {
@@ -368,6 +371,24 @@ export default function App() {
   const [showLauncher, setShowLauncher] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
+  const [drawerSearchQuery, setDrawerSearchQuery] = useState("");
+  const [drawerSortBy, setDrawerSortBy] = useState<
+    "default" | "most-used" | "recent" | "az" | "za"
+  >(() => {
+    try {
+      const saved = localStorage.getItem("sewanadu_drawer_sort");
+      if (
+        saved === "default" ||
+        saved === "most-used" ||
+        saved === "recent" ||
+        saved === "az" ||
+        saved === "za"
+      ) {
+        return saved;
+      }
+    } catch {}
+    return "default";
+  });
   const [isSavedServicesOpen, setIsSavedServicesOpen] = useState(false);
   const [policyModal, setPolicyModal] = useState<"privacy" | "terms" | "cookie" | "about" | null>(
     null,
@@ -692,8 +713,390 @@ export default function App() {
     triggerToast(t("toast.reset_chat"), "info");
   };
 
+  // Reset drawer search query when mobile more drawer closes
+  useEffect(() => {
+    if (!isMobileMoreOpen) {
+      setDrawerSearchQuery("");
+    }
+  }, [isMobileMoreOpen]);
+
+  // Record hub section usage clicks for 'Most Used' sorting
+  const recordHubClick = (sectionId: string) => {
+    try {
+      const saved = localStorage.getItem("sewanadu_hub_clicks");
+      const parsed = saved ? JSON.parse(saved) : {};
+      parsed[sectionId] = (parsed[sectionId] || 0) + 1;
+      localStorage.setItem("sewanadu_hub_clicks", JSON.stringify(parsed));
+    } catch {}
+  };
+
+  const handleDrawerSortChange = (sort: "default" | "most-used" | "recent" | "az" | "za") => {
+    setDrawerSortBy(sort);
+    try {
+      localStorage.setItem("sewanadu_drawer_sort", sort);
+    } catch {}
+  };
+
+  // Helper to determine if a hub section was added or modified in the last 7 days
+  const getSectionActivityBadge = (item: { createdAt?: string; updatedAt?: string }) => {
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    // Check if added within the last 7 days
+    if (item.createdAt) {
+      const createdTime = new Date(item.createdAt).getTime();
+      if (!isNaN(createdTime) && now >= createdTime && now - createdTime <= SEVEN_DAYS_MS) {
+        return {
+          type: "new" as const,
+          label: language === "hi" ? "नया" : "New",
+          tooltip: language === "hi" ? "पिछले 7 दिनों में जोड़ा गया" : "Added in the last 7 days",
+        };
+      }
+    }
+
+    // Check if modified within the last 7 days
+    if (item.updatedAt) {
+      const updatedTime = new Date(item.updatedAt).getTime();
+      if (!isNaN(updatedTime) && now >= updatedTime && now - updatedTime <= SEVEN_DAYS_MS) {
+        return {
+          type: "updated" as const,
+          label: language === "hi" ? "अपडेट" : "Updated",
+          tooltip: language === "hi" ? "पिछले 7 दिनों में संशोधित" : "Modified in the last 7 days",
+        };
+      }
+    }
+
+    return null;
+  };
+
+  // Mobile More Hub sections catalog
+  const mobileHubSections = [
+    {
+      id: "eligibility",
+      title: t("tab.eligibility"),
+      titleHi: "योजना पात्रता जांच",
+      badge: "Statutory",
+      badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      description: language === "hi" ? "योजना पात्रता जांचें" : "Check eligibility criteria",
+      descriptionHi: "योजना पात्रता जांचें",
+      icon: Award,
+      iconColor: "text-amber-500",
+      isActive: activeTab === "eligibility",
+      usageRank: 2,
+      updatedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+      keywords: ["eligibility", "criteria", "scheme", "qualification", "rules", "पात्रता", "योजना"],
+      onClick: () => {
+        recordHubClick("eligibility");
+        setActiveTab("eligibility");
+        setIsMobileMoreOpen(false);
+        setDrawerSearchQuery("");
+      },
+    },
+    {
+      id: "sitemap",
+      title: language === "hi" ? "100+ सेवाएँ" : "Sitemap Index",
+      titleHi: "100+ सेवाएँ",
+      badge: "Directory",
+      badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      description: language === "hi" ? "केंद्रीय और राज्य सूची" : "Unified e-Sewa deep-links",
+      descriptionHi: "केंद्रीय और राज्य सूची",
+      icon: Globe,
+      iconColor: "text-emerald-500",
+      isActive: activeTab === "sitemap",
+      usageRank: 7,
+      updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      keywords: [
+        "sitemap",
+        "directory",
+        "services",
+        "all services",
+        "deep-links",
+        "sites",
+        "साइटमैप",
+        "सूची",
+        "updated",
+        "अपडेट",
+      ],
+      onClick: () => {
+        recordHubClick("sitemap");
+        setActiveTab("sitemap");
+        setIsMobileMoreOpen(false);
+        setDrawerSearchQuery("");
+      },
+    },
+    {
+      id: "faq",
+      title: t("tab.faq"),
+      titleHi: "अक्सर पूछे जाने वाले प्रश्न",
+      badge: "Rate Cards",
+      badgeClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+      description: language === "hi" ? "समय-सीमा और राज्य सेवा मानक" : "Timelines and state SLAs",
+      descriptionHi: "समय-सीमा और राज्य सेवा मानक",
+      icon: HelpCircle,
+      iconColor: "text-indigo-500",
+      isActive: activeTab === "faq",
+      usageRank: 6,
+      updatedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
+      keywords: [
+        "faq",
+        "rate cards",
+        "rates",
+        "timelines",
+        "sla",
+        "fees",
+        "questions",
+        "शुल्क",
+        "प्रश्न",
+        "दर",
+      ],
+      onClick: () => {
+        recordHubClick("faq");
+        setActiveTab("faq");
+        setIsMobileMoreOpen(false);
+        setDrawerSearchQuery("");
+      },
+    },
+    {
+      id: "saved",
+      title: language === "hi" ? "पसंदीदा सेवाएँ" : "Saved Services",
+      titleHi: "पसंदीदा सेवाएँ",
+      badge: `${savedServiceIds.length} Saved`,
+      badgeClass: "bg-rose-500/10 text-rose-650 dark:text-rose-400",
+      description: language === "hi" ? "बुकमार्क वाली सूची" : "Access bookmarked services",
+      descriptionHi: "बुकमार्क वाली सूची",
+      icon: BookmarkCheck,
+      iconColor: "text-rose-650",
+      isActive: isSavedServicesOpen,
+      usageRank: 3,
+      updatedAt: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
+      keywords: ["saved", "bookmarks", "favorites", "starred", "पसंदीदा", "सहेजी गई", "बुकमार्क"],
+      onClick: () => {
+        recordHubClick("saved");
+        setIsSavedServicesOpen(true);
+        setIsMobileMoreOpen(false);
+        setDrawerSearchQuery("");
+      },
+    },
+    {
+      id: "search",
+      title: language === "hi" ? "वैश्विक खोज" : "Global Search",
+      titleHi: "वैश्विक खोज",
+      badge: "Instant",
+      badgeClass: "bg-[#FF5A2B]/10 text-orange-650 dark:text-orange-400",
+      description: language === "hi" ? "सभी सेवाएँ और योजनाएँ खोजें" : "Locate services by keyword",
+      descriptionHi: "सभी सेवाएँ और योजनाएँ खोजें",
+      icon: Search,
+      iconColor: "text-[#FF5A2B]",
+      isActive: isMobileSearchOpen,
+      usageRank: 5,
+      updatedAt: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000).toISOString(),
+      keywords: ["search", "find", "keyword", "lookup", "खोज", "सर्च"],
+      onClick: () => {
+        recordHubClick("search");
+        setIsMobileSearchOpen(true);
+        setIsMobileMoreOpen(false);
+        setDrawerSearchQuery("");
+      },
+    },
+    {
+      id: "legal-hub",
+      title: language === "hi" ? "नीति एवं विलेख" : "Legal & Info",
+      titleHi: "नीति एवं विलेख",
+      badge: "Gazette",
+      badgeClass: "bg-slate-500/10 text-stone-600 dark:text-slate-400",
+      description: language === "hi" ? "हमारे बारे में और गोपनीयता" : "Consent, RTI, & licensing",
+      descriptionHi: "हमारे बारे में और गोपनीयता",
+      icon: Building2,
+      iconColor: "text-stone-550 dark:text-slate-400",
+      isActive: activeTab === "legal-hub",
+      usageRank: 9,
+      updatedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
+      keywords: [
+        "legal",
+        "info",
+        "terms",
+        "privacy",
+        "about",
+        "disclaimer",
+        "rti",
+        "कानून",
+        "नीति",
+        "गोपनीयता",
+      ],
+      onClick: () => {
+        recordHubClick("legal-hub");
+        setActiveTab("legal-hub");
+        setLegalHubDefaultSection("about");
+        setIsMobileMoreOpen(false);
+        setDrawerSearchQuery("");
+      },
+    },
+    {
+      id: "discussions",
+      title: language === "hi" ? "नागरिक चर्चा" : "Citizen Forums",
+      titleHi: "नागरिक चर्चा",
+      badge: "Debates",
+      badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      description:
+        language === "hi" ? "समुदाय द्वारा सत्यापित धागे" : "Community-verified policy threads",
+      descriptionHi: "समुदाय द्वारा सत्यापित धागे",
+      icon: Users,
+      iconColor: "text-amber-500",
+      isActive: activeTab === "discussions",
+      usageRank: 8,
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      keywords: [
+        "discussions",
+        "forum",
+        "community",
+        "debates",
+        "threads",
+        "नागरिक",
+        "चर्चा",
+        "मंच",
+        "updated",
+        "अपडेट",
+      ],
+      onClick: () => {
+        recordHubClick("discussions");
+        setActiveTab("discussions");
+        setIsMobileMoreOpen(false);
+        setDrawerSearchQuery("");
+      },
+    },
+    {
+      id: "status",
+      title: language === "hi" ? "आवेदन स्थिति" : "Status Tracker",
+      titleHi: "आवेदन स्थिति",
+      badge: "Live Track",
+      badgeClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+      description:
+        language === "hi" ? "आवेदन की प्रगति देखें" : "Track government application progress",
+      descriptionHi: "आवेदन की प्रगति देखें",
+      icon: ClipboardCheck,
+      iconColor: "text-blue-500",
+      isActive: activeTab === "status",
+      usageRank: 1,
+      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      keywords: [
+        "status",
+        "track",
+        "application",
+        "reference",
+        "पावती",
+        "स्थिति",
+        "ट्रैकर",
+        "updated",
+        "अपडेट",
+      ],
+      onClick: () => {
+        recordHubClick("status");
+        setActiveTab("status");
+        setIsMobileMoreOpen(false);
+        setDrawerSearchQuery("");
+      },
+    },
+    {
+      id: "rti",
+      title: language === "hi" ? "सूचना का अधिकार" : "RTI Assistant",
+      titleHi: "सूचना का अधिकार",
+      badge: "Statutory",
+      badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      description:
+        language === "hi"
+          ? "आरटीआई प्रारूप एवं मार्गदर्शन"
+          : "Right to Information draft and filing guide",
+      descriptionHi: "आरटीआई प्रारूप एवं मार्गदर्शन",
+      icon: Scale,
+      iconColor: "text-emerald-600",
+      isActive: activeTab === "rti",
+      usageRank: 4,
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      keywords: [
+        "rti",
+        "right to information",
+        "appeal",
+        "draft",
+        "आरटीआई",
+        "सूचना",
+        "अधिकार",
+        "new",
+        "नया",
+      ],
+      onClick: () => {
+        recordHubClick("rti");
+        setActiveTab("rti");
+        setIsMobileMoreOpen(false);
+        setDrawerSearchQuery("");
+      },
+    },
+  ];
+
+  const filteredAndSortedHubSections = useMemo(() => {
+    const q = drawerSearchQuery.trim().toLowerCase();
+    const filtered = mobileHubSections.filter((item) => {
+      if (!q) return true;
+      const activity = getSectionActivityBadge(item);
+      const matchTitle =
+        item.title.toLowerCase().includes(q) || item.titleHi.toLowerCase().includes(q);
+      const matchDesc =
+        item.description.toLowerCase().includes(q) || item.descriptionHi.toLowerCase().includes(q);
+      const matchBadge = item.badge.toLowerCase().includes(q);
+      const matchKeywords = item.keywords.some((k) => k.toLowerCase().includes(q));
+      const matchActivity = activity
+        ? activity.label.toLowerCase().includes(q) ||
+          (activity.type === "new" && (q === "new" || q === "नया")) ||
+          (activity.type === "updated" && (q === "updated" || q === "अपडेट"))
+        : false;
+      return matchTitle || matchDesc || matchBadge || matchKeywords || matchActivity;
+    });
+
+    if (drawerSortBy === "az") {
+      return [...filtered].sort((a, b) =>
+        a.title.localeCompare(b.title, undefined, { sensitivity: "base" }),
+      );
+    }
+    if (drawerSortBy === "za") {
+      return [...filtered].sort((a, b) =>
+        b.title.localeCompare(a.title, undefined, { sensitivity: "base" }),
+      );
+    }
+    if (drawerSortBy === "recent") {
+      return [...filtered].sort((a, b) => {
+        const timeA = Math.max(
+          a.updatedAt ? new Date(a.updatedAt).getTime() : 0,
+          a.createdAt ? new Date(a.createdAt).getTime() : 0,
+        );
+        const timeB = Math.max(
+          b.updatedAt ? new Date(b.updatedAt).getTime() : 0,
+          b.createdAt ? new Date(b.createdAt).getTime() : 0,
+        );
+        return timeB - timeA;
+      });
+    }
+    if (drawerSortBy === "most-used") {
+      let clicksMap: Record<string, number> = {};
+      try {
+        const saved = localStorage.getItem("sewanadu_hub_clicks");
+        if (saved) {
+          clicksMap = JSON.parse(saved);
+        }
+      } catch {}
+      return [...filtered].sort((a, b) => {
+        const clicksA = clicksMap[a.id] || 0;
+        const clicksB = clicksMap[b.id] || 0;
+        const scoreA = clicksA * 100 + (10 - a.usageRank);
+        const scoreB = clicksB * 100 + (10 - b.usageRank);
+        return scoreB - scoreA;
+      });
+    }
+
+    return filtered;
+  }, [mobileHubSections, drawerSearchQuery, drawerSortBy, language]);
+
   return (
     <div className="min-h-screen bg-brand-cream-bg flex flex-col font-sans selection:bg-brand-coral selection:text-white pb-6 text-stone-900">
+      <SEOHead path="/" />
       {/* 1. Tricolor Top Visual Accent Strip */}
       <div className="h-[3px] w-full bg-gradient-to-r from-orange-500 via-white to-emerald-600 select-none"></div>
 
@@ -994,12 +1397,12 @@ export default function App() {
                 className="flex items-center gap-1 px-2 py-0.5 text-[9.5px] sm:text-[10px] font-bold text-stone-700 hover:text-stone-950 dark:text-stone-300 dark:hover:text-white rounded-full transition border-0 bg-transparent cursor-pointer whitespace-nowrap"
                 title={
                   language === "hi"
-                    ? "सूचना का अधिकार (RTI) दायर करें"
-                    : "File an Online RTI Application Request"
+                    ? "सूचना का अधिकार (RTI सेवा) - प्रिंट एवं ऑनलाइन दाखिला"
+                    : "RTI Seva - File & Print Statutory RTI Application"
                 }
               >
                 <Scale className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-600 dark:text-amber-500 shrink-0" />
-                <span>{language === "hi" ? "RTI दाखिला" : "RTI Filing"}</span>
+                <span>{language === "hi" ? "RTI सेवा" : "RTI Seva"}</span>
               </button>
 
               <div className="w-px h-2.5 bg-stone-250 dark:bg-stone-800"></div>
@@ -1458,7 +1861,7 @@ export default function App() {
                 onClick={() => setIsMobileMoreOpen(false)}
               ></div>
 
-              <div className="px-5 py-2 space-y-4">
+              <div className="px-5 py-2 space-y-3.5">
                 <div className="flex items-center justify-between pb-1 border-b border-stone-200 dark:border-white/5">
                   <div className="space-y-0.5 text-left">
                     <h3 className="text-xs font-black text-stone-900 dark:text-white uppercase tracking-wider font-display flex items-center gap-1.5">
@@ -1479,214 +1882,234 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  {/* 1. Eligibility Checker */}
-                  <button
-                    onClick={() => {
-                      setActiveTab("eligibility");
-                      setIsMobileMoreOpen(false);
-                    }}
-                    className={`p-4 rounded-2xl text-left border flex flex-col justify-between gap-4 transition cursor-pointer ${
-                      activeTab === "eligibility"
-                        ? "bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400"
-                        : "bg-stone-50 dark:bg-slate-900/40 border-stone-200 dark:border-white/5 text-stone-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-indigo-950/25"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <Award
-                        className={`w-4.5 h-4.5 ${activeTab === "eligibility" ? "text-orange-600 dark:text-orange-400" : "text-amber-500"}`}
-                      />
-                      <span className="text-[8px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.2 rounded font-mono font-black uppercase">
-                        Statutory
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <strong className="text-xs font-bold block leading-none mb-0.5">
-                        {t("tab.eligibility")}
-                      </strong>
-                      <span className="text-[9.5px] text-stone-550 dark:text-slate-400 block leading-tight">
-                        {language === "hi" ? "योजना पात्रता जांचें" : "Check eligibility criteria"}
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* 3. sitemap directory */}
-                  <button
-                    onClick={() => {
-                      setActiveTab("sitemap");
-                      setIsMobileMoreOpen(false);
-                    }}
-                    className={`p-4 rounded-2xl text-left border flex flex-col justify-between gap-4 transition cursor-pointer ${
-                      activeTab === "sitemap"
-                        ? "bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400"
-                        : "bg-stone-50 dark:bg-slate-900/40 border-stone-200 dark:border-white/5 text-stone-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-indigo-950/25"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <Globe
-                        className={`w-4.5 h-4.5 ${activeTab === "sitemap" ? "text-orange-600 dark:text-orange-400" : "text-emerald-500"}`}
-                      />
-                      <span className="text-[8px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.2 rounded font-mono font-black uppercase">
-                        Directory
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <strong className="text-xs font-bold block leading-none mb-0.5">
-                        {language === "hi" ? "100+ सेवाएँ" : "Sitemap Index"}
-                      </strong>
-                      <span className="text-[9.5px] text-stone-550 dark:text-slate-400 block leading-tight">
-                        {language === "hi" ? "केंद्रीय और राज्य सूची" : "Unified e-Sewa deep-links"}
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* 4. FAQ rates */}
-                  <button
-                    onClick={() => {
-                      setActiveTab("faq");
-                      setIsMobileMoreOpen(false);
-                    }}
-                    className={`p-4 rounded-2xl text-left border flex flex-col justify-between gap-4 transition cursor-pointer ${
-                      activeTab === "faq"
-                        ? "bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400"
-                        : "bg-stone-50 dark:bg-slate-900/40 border-stone-200 dark:border-white/5 text-stone-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-indigo-950/25"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <HelpCircle
-                        className={`w-4.5 h-4.5 ${activeTab === "faq" ? "text-orange-600 dark:text-orange-400" : "text-indigo-500"}`}
-                      />
-                      <span className="text-[8px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.2 rounded font-mono font-black uppercase">
-                        Rate Cards
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <strong className="text-xs font-bold block leading-none mb-0.5">
-                        {t("tab.faq")}
-                      </strong>
-                      <span className="text-[9.5px] text-stone-550 dark:text-slate-400 block leading-tight">
-                        {language === "hi"
-                          ? "अक्सर पूछे जाने वाले प्रश्न"
-                          : "Timelines and state SLAs"}
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* Saved Bookmarks Trigger */}
-                  <button
-                    onClick={() => {
-                      setIsSavedServicesOpen(true);
-                      setIsMobileMoreOpen(false);
-                    }}
-                    className="p-4 rounded-2xl text-left border bg-stone-50 dark:bg-slate-900/40 border-stone-200 dark:border-white/5 text-stone-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-indigo-950/25 flex flex-col justify-between gap-4 transition cursor-pointer font-sans"
-                  >
-                    <div className="flex items-center justify-between">
-                      <BookmarkCheck className="w-4.5 h-4.5 text-rose-650" />
-                      <span className="text-[8px] bg-rose-500/10 text-rose-650 dark:text-rose-400 px-1.5 py-0.2 rounded font-mono font-black uppercase">
-                        {savedServiceIds.length} Saved
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <strong className="text-xs font-bold block leading-none mb-0.5">
-                        {language === "hi" ? "पसंदीदा सेवाएँ" : "Saved Services"}
-                      </strong>
-                      <span className="text-[9.5px] text-stone-550 dark:text-slate-400 block leading-tight">
-                        {language === "hi" ? "बुकमार्क वाली सूची" : "Access bookmarked services"}
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* 5. Search trigger */}
-                  <button
-                    onClick={() => {
-                      setIsMobileSearchOpen(true);
-                      setIsMobileMoreOpen(false);
-                    }}
-                    className="p-4 rounded-2xl text-left border bg-stone-50 dark:bg-slate-900/40 border-stone-200 dark:border-white/5 text-stone-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-indigo-950/25 flex flex-col justify-between gap-4 transition cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between">
-                      <Search className="w-4.5 h-4.5 text-[#FF5A2B]" />
-                      <span className="text-[8px] bg-[#FF5A2B]/10 text-orange-650 dark:text-orange-400 px-1.5 py-0.2 rounded font-mono font-black uppercase">
-                        Instant
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <strong className="text-xs font-bold block leading-none mb-0.5">
-                        {language === "hi" ? "वैश्विक खोज" : "Global Search"}
-                      </strong>
-                      <span className="text-[9.5px] text-stone-550 dark:text-slate-400 block leading-tight">
-                        {language === "hi"
-                          ? "सभी सेवाएँ और योजनाएँ खोजें"
-                          : "Locate services by keyword"}
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* 6. Legal Hub */}
-                  <button
-                    onClick={() => {
-                      setActiveTab("legal-hub");
-                      setLegalHubDefaultSection("about");
-                      setIsMobileMoreOpen(false);
-                    }}
-                    className={`p-4 rounded-2xl text-left border flex flex-col justify-between gap-4 transition cursor-pointer ${
-                      activeTab === "legal-hub"
-                        ? "bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400"
-                        : "bg-stone-50 dark:bg-slate-900/40 border-stone-200 dark:border-white/5 text-stone-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-indigo-950/25"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <Building2
-                        className={`w-4.5 h-4.5 ${activeTab === "legal-hub" ? "text-orange-600 dark:text-orange-400" : "text-stone-550 dark:text-slate-400"}`}
-                      />
-                      <span className="text-[8px] bg-slate-500/10 text-stone-600 dark:text-slate-400 px-1.5 py-0.2 rounded font-mono font-black uppercase">
-                        Gazette
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <strong className="text-xs font-bold block leading-none mb-0.5">
-                        {language === "hi" ? "नीति एवं विलेख" : "Legal & Info"}
-                      </strong>
-                      <span className="text-[9.5px] text-stone-550 dark:text-slate-400 block leading-tight">
-                        {language === "hi"
-                          ? "हमारे बारे में और गोपनीयता"
-                          : "Consent, RTI, & licensing"}
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* 7. Citizen Discussions */}
-                  <button
-                    onClick={() => {
-                      setActiveTab("discussions");
-                      setIsMobileMoreOpen(false);
-                    }}
-                    className={`p-4 rounded-2xl text-left border flex flex-col justify-between gap-4 transition cursor-pointer ${
-                      activeTab === "discussions"
-                        ? "bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400"
-                        : "bg-stone-50 dark:bg-slate-900/40 border-stone-200 dark:border-white/5 text-stone-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-indigo-950/25"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <Users
-                        className={`w-4.5 h-4.5 ${activeTab === "discussions" ? "text-orange-600 dark:text-orange-400" : "text-amber-500"}`}
-                      />
-                      <span className="text-[8px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.2 rounded font-mono font-black uppercase">
-                        Debates
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <strong className="text-xs font-bold block leading-none mb-0.5">
-                        {language === "hi" ? "नागरिक चर्चा" : "Citizen Forums"}
-                      </strong>
-                      <span className="text-[9.5px] text-stone-550 dark:text-slate-400 block leading-tight">
-                        {language === "hi"
-                          ? "समुदाय द्वारा सत्यापित धागे"
-                          : "Community-verified policy threads"}
-                      </span>
-                    </div>
-                  </button>
+                {/* Search Bar at the very top of drawer for faster section access */}
+                <div className="relative">
+                  <Search className="w-4 h-4 text-stone-400 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={drawerSearchQuery}
+                    onChange={(e) => setDrawerSearchQuery(e.target.value)}
+                    placeholder={
+                      language === "hi"
+                        ? "हब अनुभाग या सेवा खोजें (उदा. पात्रता, RTI, FAQ)..."
+                        : "Search hub sections (e.g. Eligibility, FAQ, RTI)..."
+                    }
+                    className="w-full pl-9.5 pr-8 py-2.5 bg-stone-100/90 dark:bg-white/5 border border-stone-200/90 dark:border-white/10 rounded-2xl text-xs text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition shadow-inner font-sans"
+                    autoComplete="off"
+                  />
+                  {drawerSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setDrawerSearchQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-stone-400 hover:text-stone-700 dark:hover:text-white cursor-pointer rounded-full transition"
+                      aria-label="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
+
+                {/* Quick 1-click service directory deep-search if query entered */}
+                {drawerSearchQuery.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(drawerSearchQuery.trim());
+                      setActiveTab("services");
+                      setIsMobileMoreOpen(false);
+                      setDrawerSearchQuery("");
+                    }}
+                    className="w-full p-2.5 bg-orange-50/90 dark:bg-orange-950/40 border border-orange-250 dark:border-orange-500/30 rounded-xl flex items-center justify-between text-left transition cursor-pointer hover:bg-orange-100/80 active:scale-[0.99]"
+                  >
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <Search className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0" />
+                      <span className="text-xs font-bold text-orange-900 dark:text-orange-200 truncate">
+                        {language === "hi"
+                          ? `सभी 100+ सेवाओं में "${drawerSearchQuery}" खोजें`
+                          : `Search "${drawerSearchQuery}" in 100+ Services Directory`}
+                      </span>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0 ml-2" />
+                  </button>
+                )}
+
+                {/* Hub Toolbar: Results Count and Sorting Dropdown */}
+                <div className="flex items-center justify-between gap-2 px-1 pt-1 pb-0.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-[11px] font-bold text-stone-600 dark:text-slate-300 truncate">
+                      {language === "hi"
+                        ? `${filteredAndSortedHubSections.length} अनुभाग`
+                        : `${filteredAndSortedHubSections.length} Sections`}
+                    </span>
+                    {drawerSearchQuery && (
+                      <span className="text-[9px] bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 font-mono px-1.5 py-0.5 rounded-md font-semibold shrink-0">
+                        {language === "hi" ? "फ़िल्टर" : "Filtered"}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Sorting Dropdown Control */}
+                  <div className="relative inline-flex items-center shrink-0">
+                    <label
+                      htmlFor="mobile-hub-sort"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-stone-100/95 dark:bg-white/5 border border-stone-200/90 dark:border-white/10 hover:border-orange-500/40 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/20 transition cursor-pointer text-[11px] font-medium text-stone-700 dark:text-slate-200 shadow-3xs"
+                    >
+                      <ArrowUpDown className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0" />
+                      <span className="text-stone-500 dark:text-slate-400 text-[10px] font-semibold select-none">
+                        {language === "hi" ? "क्रम:" : "Sort:"}
+                      </span>
+                      <select
+                        id="mobile-hub-sort"
+                        value={drawerSortBy}
+                        onChange={(e) =>
+                          handleDrawerSortChange(
+                            e.target.value as "default" | "most-used" | "recent" | "az" | "za",
+                          )
+                        }
+                        className="bg-transparent text-stone-850 dark:text-white font-bold text-[11px] focus:outline-none cursor-pointer pr-0.5 appearance-none"
+                        aria-label={
+                          language === "hi" ? "अनुभाग क्रमबद्ध करें" : "Sort hub sections"
+                        }
+                      >
+                        <option
+                          value="default"
+                          className="bg-white dark:bg-slate-900 text-stone-800 dark:text-white"
+                        >
+                          {language === "hi" ? "अनुशंसित" : "Recommended"}
+                        </option>
+                        <option
+                          value="most-used"
+                          className="bg-white dark:bg-slate-900 text-stone-800 dark:text-white"
+                        >
+                          {language === "hi" ? "सर्वाधिक प्रयुक्त" : "Most Used"}
+                        </option>
+                        <option
+                          value="recent"
+                          className="bg-white dark:bg-slate-900 text-stone-800 dark:text-white"
+                        >
+                          {language === "hi" ? "नया / अपडेट (7 दिन)" : "New / Updated (7 days)"}
+                        </option>
+                        <option
+                          value="az"
+                          className="bg-white dark:bg-slate-900 text-stone-800 dark:text-white"
+                        >
+                          {language === "hi" ? "वर्णमाला (A-Z)" : "Alphabetical (A-Z)"}
+                        </option>
+                        <option
+                          value="za"
+                          className="bg-white dark:bg-slate-900 text-stone-800 dark:text-white"
+                        >
+                          {language === "hi" ? "वर्णमाला (Z-A)" : "Alphabetical (Z-A)"}
+                        </option>
+                      </select>
+                      <ChevronRight className="w-3 h-3 text-stone-400 rotate-90 shrink-0 pointer-events-none -ml-0.5" />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Dynamic Hub Sections Grid */}
+                {filteredAndSortedHubSections.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-3 pt-0.5">
+                    <AnimatePresence mode="popLayout">
+                      {filteredAndSortedHubSections.map((item) => {
+                        const activityBadge = getSectionActivityBadge(item);
+                        return (
+                          <motion.button
+                            key={item.id}
+                            layout
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.16 }}
+                            onClick={item.onClick}
+                            className={`p-4 rounded-2xl text-left border flex flex-col justify-between gap-4 transition cursor-pointer ${
+                              item.isActive
+                                ? "bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400"
+                                : "bg-stone-50 dark:bg-slate-900/40 border-stone-200 dark:border-white/5 text-stone-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-indigo-950/25"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 w-full">
+                              <item.icon
+                                className={`w-4.5 h-4.5 shrink-0 ${item.isActive ? "text-orange-600 dark:text-orange-400" : item.iconColor}`}
+                              />
+                              <div className="flex items-center gap-1 shrink-0">
+                                {activityBadge && (
+                                  <span
+                                    className={`text-[7.5px] px-1.5 py-0.5 rounded font-sans font-black uppercase tracking-wider inline-flex items-center gap-0.5 shadow-3xs ${
+                                      activityBadge.type === "new"
+                                        ? "bg-emerald-600 text-white dark:bg-emerald-500"
+                                        : "bg-blue-600 text-white dark:bg-blue-500"
+                                    }`}
+                                    title={activityBadge.tooltip}
+                                  >
+                                    <span
+                                      className={`w-1 h-1 rounded-full bg-white shrink-0 ${
+                                        activityBadge.type === "new" ? "animate-ping" : ""
+                                      }`}
+                                    />
+                                    {activityBadge.label}
+                                  </span>
+                                )}
+                                <span
+                                  className={`text-[8px] px-1.5 py-0.2 rounded font-mono font-black uppercase ${item.badgeClass}`}
+                                >
+                                  {item.badge}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="space-y-0.5">
+                              <strong className="text-xs font-bold block leading-none mb-0.5">
+                                {item.title}
+                              </strong>
+                              <span className="text-[9.5px] text-stone-550 dark:text-slate-400 block leading-tight">
+                                {item.description}
+                              </span>
+                            </div>
+                          </motion.button>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center bg-stone-50 dark:bg-white/5 border border-dashed border-stone-200 dark:border-white/10 rounded-2xl space-y-3 my-2">
+                    <p className="text-xs font-bold text-stone-800 dark:text-white">
+                      {language === "hi"
+                        ? `हब में "${drawerSearchQuery}" से संबंधित कोई अनुभाग नहीं मिला`
+                        : `No hub sections match "${drawerSearchQuery}"`}
+                    </p>
+                    <p className="text-[11px] text-stone-500 dark:text-slate-400">
+                      {language === "hi"
+                        ? "आप इसे सीधे नागरिक सेवा निर्देशिका में खोज सकते हैं"
+                        : "You can search for this directly across all citizen services"}
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery(drawerSearchQuery.trim());
+                          setActiveTab("services");
+                          setIsMobileMoreOpen(false);
+                          setDrawerSearchQuery("");
+                        }}
+                        className="w-full sm:w-auto px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Search className="w-3.5 h-3.5" />
+                        <span>
+                          {language === "hi"
+                            ? `सेवाओं में "${drawerSearchQuery}" खोजें`
+                            : `Search "${drawerSearchQuery}" in Services`}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDrawerSearchQuery("")}
+                        className="w-full sm:w-auto px-3 py-2 bg-stone-200 dark:bg-white/10 text-stone-700 dark:text-slate-200 rounded-xl text-xs font-bold transition cursor-pointer"
+                      >
+                        {language === "hi" ? "फ़िल्टर साफ़ करें" : "Clear Filter"}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Profile removed to ensure no registration requirements */}
               </div>

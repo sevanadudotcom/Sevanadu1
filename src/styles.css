@@ -41,54 +41,53 @@ svg {
   border-radius: 4px;
 }
 
-
 :root {
-  --color-brand-cream-bg: #FCFBF7;
-  --color-brand-cream-card: #FAF8F5;
-  --color-brand-cream-dark: #F3EFE6;
-  --color-charcoal-900: #1C1917;
-  --color-charcoal-700: #44403C;
-  --color-charcoal-500: #78716C;
-  --color-border-subtle: #E5E2D9;
-  --color-slate-450: #64748B;
+  --color-brand-cream-bg: #fcfbf7;
+  --color-brand-cream-card: #faf8f5;
+  --color-brand-cream-dark: #f3efe6;
+  --color-charcoal-900: #1c1917;
+  --color-charcoal-700: #44403c;
+  --color-charcoal-500: #78716c;
+  --color-border-subtle: #e5e2d9;
+  --color-slate-450: #64748b;
   --color-slate-455: #475569;
 }
 
 /* Elegant High-contrast Dark Mode variables suitable for low-light environments */
 html.dark {
-  --color-brand-cream-bg: #090E17;  /* Deep dark slate-navy base */
-  --color-brand-cream-card: #111A2E; /* Rich slate-900 for modern elements */
-  --color-brand-cream-dark: #1E293B; /* Slate-800 accent boxes */
-  --color-charcoal-900: #F8FAFC;      /* High contrast pure slate-50/100 */
-  --color-charcoal-700: #CBD5E1;
-  --color-charcoal-500: #94A3B8;
-  --color-border-subtle: #273549;     /* Deep navy-slate borders */
-  --color-slate-450: #94A3B8;
-  --color-slate-455: #CBD5E1;
-  
-  background-color: #090E17;
-  color: #F8FAFC;
+  --color-brand-cream-bg: #090e17; /* Deep dark slate-navy base */
+  --color-brand-cream-card: #111a2e; /* Rich slate-900 for modern elements */
+  --color-brand-cream-dark: #1e293b; /* Slate-800 accent boxes */
+  --color-charcoal-900: #f8fafc; /* High contrast pure slate-50/100 */
+  --color-charcoal-700: #cbd5e1;
+  --color-charcoal-500: #94a3b8;
+  --color-border-subtle: #273549; /* Deep navy-slate borders */
+  --color-slate-450: #94a3b8;
+  --color-slate-455: #cbd5e1;
+
+  background-color: #090e17;
+  color: #f8fafc;
 }
 
 /* Force state transformations for elements that have hardcoded white and stone classes */
 html.dark body {
-  background-color: #090E17;
-  color: #F8FAFC;
+  background-color: #090e17;
+  color: #f8fafc;
 }
 
 html.dark .bg-white {
-  background-color: #111A2E !important;
+  background-color: #111a2e !important;
 }
 
 html.dark .bg-stone-50,
 html.dark .bg-stone-100,
 html.dark .bg-\[\#FAF8F5\],
 html.dark .bg-\[\#FAF8F5\]\/10 {
-  background-color: #1E293B !important;
+  background-color: #1e293b !important;
 }
 
 html.dark .bg-\[\#FCFBF7\] {
-  background-color: #090E17 !important;
+  background-color: #090e17 !important;
 }
 
 html.dark .text-stone-900,
@@ -96,7 +95,7 @@ html.dark .text-stone-850,
 html.dark .text-slate-900,
 html.dark .text-neutral-900,
 html.dark .text-stone-950 {
-  color: #F8FAFC !important;
+  color: #f8fafc !important;
 }
 
 html.dark .text-stone-800,
@@ -105,7 +104,7 @@ html.dark .text-stone-700,
 html.dark .text-stone-650,
 html.dark .text-slate-700,
 html.dark .text-neutral-700 {
-  color: #CBD5E1 !important;
+  color: #cbd5e1 !important;
 }
 
 html.dark .text-stone-600,
@@ -115,7 +114,7 @@ html.dark .text-stone-400,
 html.dark .text-slate-500,
 html.dark .text-slate-400,
 html.dark .text-slate-450 {
-  color: #94A3B8 !important;
+  color: #94a3b8 !important;
 }
 
 html.dark .border-stone-200,
@@ -127,11 +126,11 @@ html.dark .border-\[\#E5E2D9\] {
   border-color: #273549 !important;
 }
 
-html.dark select, 
-html.dark input, 
+html.dark select,
+html.dark input,
 html.dark textarea {
-  background-color: #111A2E !important;
-  color: #F8FAFC !important;
+  background-color: #111a2e !important;
+  color: #f8fafc !important;
   border-color: #273549 !important;
 }
 
@@ -152,8 +151,8 @@ html.dark .shadow-xl {
   --color-brand-cream-bg: var(--color-brand-cream-bg);
   --color-brand-cream-card: var(--color-brand-cream-card);
   --color-brand-cream-dark: var(--color-brand-cream-dark);
-  --color-brand-coral: #FF5A2B;
-  --color-brand-coral-hover: #E0461C;
+  --color-brand-coral: #ff5a2b;
+  --color-brand-coral-hover: #e0461c;
   --color-charcoal-900: var(--color-charcoal-900);
   --color-charcoal-700: var(--color-charcoal-700);
   --color-charcoal-500: var(--color-charcoal-500);
@@ -196,5 +195,22 @@ html.dark .shadow-xl {
 
   .animate-fadeIn {
     animation: fadeIn 0.2s ease-out forwards;
+  }
+}
+
+/* Print optimizations for RTI and statutory citizen documents */
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .no-print,
+  #portal-toast-container,
+  #rti-hidden-print-frame {
+    display: none !important;
   }
 }

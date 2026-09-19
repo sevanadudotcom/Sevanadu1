@@ -159,22 +159,13 @@ export default function TopNavBar({
   // Click outside listener for dropdowns
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        langDropdownRef.current &&
-        !langDropdownRef.current.contains(e.target as Node)
-      ) {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
         setIsLangDropdownOpen(false);
       }
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(e.target as Node)
-      ) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setIsUserMenuOpen(false);
       }
-      if (
-        searchContainerRef.current &&
-        !searchContainerRef.current.contains(e.target as Node)
-      ) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
         setIsSearchFocused(false);
       }
     };
@@ -191,8 +182,7 @@ export default function TopNavBar({
     }
   };
 
-  const currentLangObj =
-    INDIAN_LANGUAGES.find((l) => l.code === language) || INDIAN_LANGUAGES[0];
+  const currentLangObj = INDIAN_LANGUAGES.find((l) => l.code === language) || INDIAN_LANGUAGES[0];
 
   const autoSuggestions = getAutoSuggestions();
 
@@ -506,12 +496,12 @@ export default function TopNavBar({
                 className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-stone-700 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-white dark:hover:bg-stone-700 transition cursor-pointer shadow-3xs"
                 title={
                   language === "hi"
-                    ? "सूचना का अधिकार (RTI) आवेदन करें"
-                    : "File an Online RTI Request"
+                    ? "सूचना का अधिकार (RTI सेवा) - प्रिंट एवं ऑनलाइन दाखिला"
+                    : "RTI Seva - File & Print Statutory RTI Application"
                 }
               >
                 <Scale className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                <span>{language === "hi" ? "RTI दाखिला" : "File RTI"}</span>
+                <span>{language === "hi" ? "RTI सेवा" : "RTI Seva"}</span>
               </button>
             </div>
 
@@ -580,9 +570,7 @@ export default function TopNavBar({
                               <span className="font-bold text-[12.5px]">{lang.nativeName}</span>
                               <span className="text-[10px] text-stone-400">{lang.name}</span>
                             </div>
-                            {isSelected && (
-                              <Check className="w-4 h-4 text-brand-coral shrink-0" />
-                            )}
+                            {isSelected && <Check className="w-4 h-4 text-brand-coral shrink-0" />}
                           </button>
                         );
                       })}

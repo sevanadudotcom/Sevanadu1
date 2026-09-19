@@ -28,6 +28,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Connectivity verification probe
+    match /test/connection {
+      allow read: if true;
+    }
+
     // Users collection
     match /users/{userId} {
       allow get: if isOwner(userId);

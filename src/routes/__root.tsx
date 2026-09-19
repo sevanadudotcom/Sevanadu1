@@ -113,9 +113,53 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               "@id": "https://sewanadu.in/#website",
               url: "https://sewanadu.in",
               name: "SewaNadu — Civic Policy & Governance Portal",
+              alternateName: ["SewaNadu", "Sewa Nadu", "sewanadu.in"],
+              description:
+                "Independent educational portal and citizen directory of Indian central and state government e-services.",
               publisher: {
                 "@id": "https://sewanadu.in/#organization",
               },
+              inLanguage: ["en-IN", "hi-IN"],
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate: "https://sewanadu.in/?q={search_term_string}",
+                },
+                "query-input": "required name=search_term_string",
+              },
+              hasPart: [
+                {
+                  "@type": "WebPage",
+                  "@id": "https://sewanadu.in/citizen-guides",
+                  url: "https://sewanadu.in/citizen-guides",
+                  name: "Citizen e-Governance Guides & Procedure Manuals",
+                },
+                {
+                  "@type": "WebPage",
+                  "@id": "https://sewanadu.in/faq",
+                  url: "https://sewanadu.in/faq",
+                  name: "Citizen Help Desk & FAQs",
+                },
+                {
+                  "@type": "WebPage",
+                  "@id": "https://sewanadu.in/about",
+                  url: "https://sewanadu.in/about",
+                  name: "About SewaNadu",
+                },
+                {
+                  "@type": "WebPage",
+                  "@id": "https://sewanadu.in/editorial-policy",
+                  url: "https://sewanadu.in/editorial-policy",
+                  name: "Editorial & Fact-Checking Policy",
+                },
+                {
+                  "@type": "WebPage",
+                  "@id": "https://sewanadu.in/contact",
+                  url: "https://sewanadu.in/contact",
+                  name: "Contact & Citizen Support Desk",
+                },
+              ],
             },
           ],
         }),

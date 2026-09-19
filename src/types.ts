@@ -3,7 +3,8 @@ export interface ESevaService {
   title: string;
   department: string;
   description: string;
-  category: "IDENTITY" | "FINANCE" | "HEALTH" | "LABOUR" | "LAND" | "WELFARE" | "AGRICULTURE" | "EDUCATION";
+  category:
+    "IDENTITY" | "FINANCE" | "HEALTH" | "LABOUR" | "LAND" | "WELFARE" | "AGRICULTURE" | "EDUCATION";
   processingTime: string;
   fees: number;
   documentsRequired: string[];

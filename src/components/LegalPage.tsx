@@ -1,6 +1,7 @@
 import React from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
 
 export interface LegalSection {
   heading: string;
@@ -51,6 +52,12 @@ export default function LegalPage({ title, subtitle, updated, sections }: LegalP
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 sm:px-6 py-8 sm:py-12">
+        <SEOHead
+          title={title}
+          description={subtitle}
+          showBreadcrumbBar={true}
+          breadcrumbClassName="mb-5 flex items-center gap-1.5 text-xs text-stone-500 font-sans flex-wrap"
+        />
         <p className="text-[11px] font-mono font-bold uppercase tracking-widest text-brand-coral">
           Legal &amp; Policy
         </p>
